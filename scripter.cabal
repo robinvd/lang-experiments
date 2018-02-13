@@ -25,6 +25,7 @@ executable scripter
                      , containers
                      , mtl
                      , bound
+                     , deriving-compat
   -- hs-source-dirs:      
   ghc-options: -Wall
   default-language:    Haskell2010

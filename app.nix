@@ -1,5 +1,5 @@
-{ mkDerivation, base, bound, containers, megaparsec, mtl, stdenv
-, text
+{ mkDerivation, base, bound, containers, deriving-compat
+, megaparsec, mtl, stdenv, text
 }:
 mkDerivation {
   pname = "scripter";
@@ -8,7 +8,7 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base bound containers megaparsec mtl text
+    base bound containers deriving-compat megaparsec mtl text
   ];
   license = stdenv.lib.licenses.mit;
 }

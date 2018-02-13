@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Main where
@@ -13,6 +15,14 @@ import Data.Text (Text)
 import qualified Data.Map as M
 
 import Bound
+import Data.List hiding (lookup)
+import Data.Foldable
+import Data.Traversable
+import Control.Monad
+import Control.Applicative
+import Data.Functor.Classes
+
+import Data.Deriving
 
 import Data.Void
 import Text.Megaparsec
@@ -35,19 +45,35 @@ data Lit
 data Expr' a
   = Call (Expr' a) [Expr' a]
   | Lit Lit
-  | Var a
-  | Let a (Expr' a) (Expr' a)
-  deriving (Eq,Ord,Show,Read,Functor,Foldable,Traversable)
+  | V a
+  | Let [Scope Int Expr' a] (Scope Int Expr' a)
+  | Lam (Scope () Expr' a)
+  -- deriving (Show, Show1, Eq,Ord,Functor,Foldable,Traversable)
+  deriving (Traversable, Functor, Foldable)
 
--- instance Show a => Show (Expr' a) where
---   show = \case
---     Call a b -> show a ++ "(" ++ show b ++ ")"
---     Lit x -> "'" ++ show x ++ "'"
---     Var a -> show a
---     Let n val expr -> "let " ++ show n ++ " = " ++ show val ++ " in " ++ show expr
---     External _ -> "Fn"
+
+instance Applicative Expr' where
+  pure = V
+  (<*>) = ap
+instance Monad Expr' where
+  return = V
+  Lit l >>= f = Lit l
+  V a >>= f = f a
+  Call x y >>= f = Call (x >>= f) (map (>>= f) y)
+  Lam e   >>= f = Lam (e >>>= f)
+
 
 type Expr = Expr' Text
+
+deriveEq1   ''Expr'
+deriveOrd1  ''Expr'
+deriveRead1 ''Expr'
+deriveShow1 ''Expr'
+
+instance Eq a => Eq (Expr' a) where (==) = eq1
+instance Ord a => Ord (Expr' a) where compare = compare1
+instance Show a => Show (Expr' a) where showsPrec = showsPrec1
+instance Read a => Read (Expr' a) where readsPrec = readsPrec1
 
 
 -- lexer
@@ -96,25 +122,38 @@ parseLit =
   <|> Float <$> float
   <|> Char <$> charLit
 
+-- parseLam = do
+--   args <- parseArgs
+--   symbol "->"
+--   e <- parseExpr
+--   return $ Lam $ abstract () e
+
 parseArgs :: Parser a -> Parser [a]
 parseArgs = parens . commaSep
+
+let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
+let_ [] b = b
+let_ bs b = Let (map (abstr . snd) bs) (abstr b)
+  where abstr = abstract (`elemIndex` map fst bs)
 
 parseExpr :: Parser Expr
 parseExpr =
   do
     symbol "let"
-    n <- lowIdentifier
-    symbol "="
-    val <- parseExpr
+    xs <- commaSep $ do
+      n <- lowIdentifier
+      symbol "="
+      val <- parseExpr
+      return (n, val)
     symbol "in"
     next <- parseExpr
-    return $ Let n val next
+    return $ let_ xs next
   <|> try (do
     -- n <- parseExpr
     n <- lowIdentifier
     args <- parseArgs parseExpr
-    return $ Call (Var n) args)
-  <|> Var <$> lowIdentifier
+    return $ Call (V n) args)
+  <|> V <$> lowIdentifier
   <|> Lit <$> parseLit
 
 -- prelude
@@ -144,19 +183,29 @@ lookup n = do
       -- S.liftIO $ print env
       error $ "lookup of " ++ show n ++ " failed"
 
-eval :: Expr -> S.StateT Env IO Fs
-eval = \case
-  Call n args -> do
-    mf <- eval n
-    case mf of
-      External fn -> fn <$> mapM eval args
-      FLit _ -> error "not a function"
-  Let n val expr -> do
-    bcVal <- eval val
-    S.modify $ M.insert n bcVal
-    eval expr
-  Var x -> lookup x
-  Lit x -> return $ FLit x
+whnf :: Expr -> Expr
+whnf = \case
+  -- Call f a -> do
+  --   x <- whnf f
+  --   case x of
+  --     Lam b -> whnf (instantiate1 a b)
+  --     f' -> App f' a
+  x -> x
+
+-- eval :: Expr -> S.StateT Env IO Fs
+-- eval = \case
+--   Call a b -> do
+--     a' <- eval a
+--     b' <- eval b
+--     case mf of
+--       External fn -> fn <$> mapM eval args
+--       FLit _ -> error "not a function"
+--   Let n val expr -> do
+--     bcVal <- eval val
+--     S.modify $ M.insert n bcVal
+--     eval expr
+--   Var x -> lookup x
+--   Lit x -> return $ FLit x
 
 main :: IO ()
 main = run "test"
@@ -170,10 +219,10 @@ run file = do
            error "failed parsing"
 
   print p
-  let e = eval p
+  -- let e = eval p
 
-  final <- S.evalStateT e prelude
-  case final of
-    FLit l -> print l
-    External _ -> putStrLn "fn"
+  -- final <- S.evalStateT e prelude
+  -- case final of
+  --   FLit l -> print l
+  --   External _ -> putStrLn "fn"
 
