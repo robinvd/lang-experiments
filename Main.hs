@@ -76,6 +76,11 @@ instance Show a => Show (Expr' a) where showsPrec = showsPrec1
 instance Read a => Read (Expr' a) where readsPrec = readsPrec1
 
 
+let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
+let_ [] b = b
+let_ bs b = Let (map (abstr . snd) bs) (abstr b)
+  where abstr = abstract (`elemIndex` map fst bs)
+
 -- lexer
 
 type Parser = Parsec Void Text
@@ -131,10 +136,6 @@ parseLit =
 parseArgs :: Parser a -> Parser [a]
 parseArgs = parens . commaSep
 
-let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
-let_ [] b = b
-let_ bs b = Let (map (abstr . snd) bs) (abstr b)
-  where abstr = abstract (`elemIndex` map fst bs)
 
 parseExpr :: Parser Expr
 parseExpr =
@@ -161,51 +162,50 @@ parseExpr =
 data Fs
   = External ([Fs] -> Fs)
   | FLit Lit
-type Env = M.Map Text Fs
+type Env = M.Map Text ([Expr] -> Expr)
 
 prelude :: Env
-prelude = M.fromList $ map (fmap External)
+prelude = M.fromList $ 
   [ ("add", \[a,b] -> add a b)]
     where
       -- add :: Bitcode -> Bitcode -> Bitcode
-      add (FLit (Int a)) (FLit (Int b)) = FLit $ Int (a+b)
-      add (FLit (Float a)) (FLit (Float b)) = FLit $ Float (a +b)
+      add (Lit (Int a)) (Lit (Int b)) = Lit $ Int (a+b)
+      add (Lit (Float a)) (Lit (Float b)) = Lit $ Float (a +b)
       add _ _ = error "not valid types"
 
 -- eval
 
-lookup :: Text -> S.StateT Env IO Fs
+lookup :: Text -> [Expr] -> Expr
 lookup n = do
-  env <- S.get
-  case M.lookup n env of
-    Just e -> return e
-    Nothing -> do
-      -- S.liftIO $ print env
-      error $ "lookup of " ++ show n ++ " failed"
+  case M.lookup n prelude of
+    Just e -> e
+    Nothing -> error $ "lookup of " ++ show n ++ " failed"
 
-whnf :: Expr -> Expr
-whnf = \case
+-- whnf :: Expr -> Expr
+-- whnf = \case
   -- Call f a -> do
   --   x <- whnf f
   --   case x of
   --     Lam b -> whnf (instantiate1 a b)
   --     f' -> App f' a
-  x -> x
+  -- x -> x
 
--- eval :: Expr -> S.StateT Env IO Fs
--- eval = \case
---   Call a b -> do
---     a' <- eval a
---     b' <- eval b
---     case mf of
---       External fn -> fn <$> mapM eval args
---       FLit _ -> error "not a function"
---   Let n val expr -> do
---     bcVal <- eval val
---     S.modify $ M.insert n bcVal
---     eval expr
---   Var x -> lookup x
---   Lit x -> return $ FLit x
+eval :: Expr -> Expr
+eval = \case
+  Call n args ->
+    let eA = eval n
+        eArgs = map eval args
+     in case eA of
+
+      V t -> (lookup t) eArgs
+      Lam l -> error "not impl"
+      Lit _ -> error "not a function"
+
+  Let bs b -> eval (inst b)
+    where es = map inst bs
+          inst = instantiate (es !!)
+  V x -> V x
+  Lit x -> Lit x
 
 main :: IO ()
 main = run "test"
@@ -219,7 +219,9 @@ run file = do
            error "failed parsing"
 
   print p
-  -- let e = eval p
+  let e = eval p
+
+  print e
 
   -- final <- S.evalStateT e prelude
   -- case final of
