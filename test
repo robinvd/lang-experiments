@@ -1,3 +1,6 @@
 let x = 5
   , y = 1
-in add(x,add(2,y))
+  , l = (a,b) -> add(a,add(b,2))
+  , sub = (a,b) -> add(a,neg(b))
+  , fac = (n) -> mult(n, sub(n,1))
+  in l(x,y)

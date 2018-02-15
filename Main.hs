@@ -47,7 +47,7 @@ data Expr' a
   | Lit Lit
   | V a
   | Let [Scope Int Expr' a] (Scope Int Expr' a)
-  | Lam (Scope () Expr' a)
+  | Lam (Scope Int Expr' a)
   -- deriving (Show, Show1, Eq,Ord,Functor,Foldable,Traversable)
   deriving (Traversable, Functor, Foldable)
 
@@ -80,6 +80,11 @@ let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
 let_ [] b = b
 let_ bs b = Let (map (abstr . snd) bs) (abstr b)
   where abstr = abstract (`elemIndex` map fst bs)
+
+lam :: Eq a => [a] -> Expr' a -> Expr' a
+lam [] b = b
+lam bs b = Lam (abstr b)
+  where abstr = abstract (`elemIndex` bs)
 
 -- lexer
 
@@ -127,11 +132,11 @@ parseLit =
   <|> Float <$> float
   <|> Char <$> charLit
 
--- parseLam = do
---   args <- parseArgs
---   symbol "->"
---   e <- parseExpr
---   return $ Lam $ abstract () e
+parseLam = do
+  args <- parseArgs lowIdentifier
+  symbol "->"
+  e <- parseExpr
+  return $ lam args e
 
 parseArgs :: Parser a -> Parser [a]
 parseArgs = parens . commaSep
@@ -154,6 +159,7 @@ parseExpr =
     n <- lowIdentifier
     args <- parseArgs parseExpr
     return $ Call (V n) args)
+  <|> parseLam
   <|> V <$> lowIdentifier
   <|> Lit <$> parseLit
 
@@ -166,12 +172,19 @@ type Env = M.Map Text ([Expr] -> Expr)
 
 prelude :: Env
 prelude = M.fromList $ 
-  [ ("add", \[a,b] -> add a b)]
+
+  [ ("add", litf (+) (+))
+  , ("mult", litf (*) (*))
+  , ("neg", litf1 (negate) (negate))
+  ]
     where
-      -- add :: Bitcode -> Bitcode -> Bitcode
-      add (Lit (Int a)) (Lit (Int b)) = Lit $ Int (a+b)
-      add (Lit (Float a)) (Lit (Float b)) = Lit $ Float (a +b)
-      add _ _ = error "not valid types"
+      -- litf :: Num a => (a -> a -> a) -> [Expr] -> Expr
+      litf f _ [(Lit (Int a)), (Lit (Int b))] = Lit $ Int $ f a b
+      litf _ f [(Lit (Float a)), (Lit (Float b))] = Lit $ Float $ f a b
+      litf _ _ _ = error "not valid types"
+      litf1 f _ [(Lit (Int b))] = Lit $ Int $ f  b
+      litf1 _ f [(Lit (Float b))] = Lit $ Float $ f  b
+      litf1 _ _ _ = error "not valid types"
 
 -- eval
 
@@ -198,14 +211,17 @@ eval = \case
      in case eA of
 
       V t -> (lookup t) eArgs
-      Lam l -> error "not impl"
+      Lam l -> 
+        let inst = instantiate (args !!)
+        in eval (inst l)
       Lit _ -> error "not a function"
 
+  Lit x -> Lit x
+  V x -> V x
   Let bs b -> eval (inst b)
     where es = map inst bs
           inst = instantiate (es !!)
-  V x -> V x
-  Lit x -> Lit x
+  Lam e -> Lam e
 
 main :: IO ()
 main = run "test"
