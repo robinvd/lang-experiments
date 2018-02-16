@@ -7,7 +7,6 @@
 module Main where
 
 import Prelude hiding (lookup)
-
 import qualified Control.Monad.State as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -33,24 +32,53 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 -- datas
 
-type Identifier = Text
-
 data Lit
   = Int Int
   | Float Float
   | Char Char
   | String Text
   deriving (Eq,Ord,Show,Read)
-  -- deriving (Eq)
+
+data Alt f a = Alt Pat (Scope () f a)
+  deriving (Traversable, Functor, Foldable, Ord, Eq, Read)
+
+data Pat
+  = PVar
+  | PLit Lit
+  -- | PWild
+  deriving (Show, Eq, Ord, Read) -- Traversable, Functor, Foldable)
+
+-- deriveEq1   ''Alt
+instance Monad f => Eq1 (Alt f)
+instance Monad f => Ord1 (Alt f)
+-- deriveOrd1  ''Alt
+instance Bound Alt where
+  Alt p b >>>= f = Alt p (b >>>= f)
+-- instance (Monad f, Eq a) => Eq (Alt f a) where (==) = eq1
+-- instance (Monad f, Ord a) => Ord (Alt f a) where compare = compare1
+-- instance (Monad f, Read a) => Read (Alt f a) where readsPrec = readsPrec1
+instance (Monad f, Show1 f) => Show1 (Alt f) where
+  liftShowsPrec sp a d (Alt pat sc) cont = 
+    "Alt (" ++ show pat ++ ") (" ++ (liftShowsPrec sp a d sc (")" ++ cont))
+
 data Expr' a
   = Call (Expr' a) [Expr' a]
   | Lit Lit
   | V a
   | Let [Scope Int Expr' a] (Scope Int Expr' a)
   | Lam (Scope Int Expr' a)
+  | Case (Expr' a) [Alt Expr' a]
   -- deriving (Show, Show1, Eq,Ord,Functor,Foldable,Traversable)
   deriving (Traversable, Functor, Foldable)
 
+-- instance (Show a) => Show (Expr' a) where
+--   show = \case
+--     Call n args -> show n ++ show args
+--     Lit l -> show l
+--     V a -> show a
+--     Let lets body -> ""
+--     Lam sc -> ""
+--     Case e alts -> "Case" ++ show e ++ "of" ++ show alts
 
 instance Applicative Expr' where
   pure = V
@@ -61,19 +89,19 @@ instance Monad Expr' where
   V a >>= f = f a
   Call x y >>= f = Call (x >>= f) (map (>>= f) y)
   Lam e   >>= f = Lam (e >>>= f)
+  Case e alts >>= f = Case (e >>= f) (map (>>>= f) alts)
 
 
 type Expr = Expr' Text
 
 deriveEq1   ''Expr'
 deriveOrd1  ''Expr'
-deriveRead1 ''Expr'
-deriveShow1 ''Expr'
+deriveShow1  ''Expr'
 
 instance Eq a => Eq (Expr' a) where (==) = eq1
 instance Ord a => Ord (Expr' a) where compare = compare1
+-- instance Show a => Show (Expr' a)
 instance Show a => Show (Expr' a) where showsPrec = showsPrec1
-instance Read a => Read (Expr' a) where readsPrec = readsPrec1
 
 
 let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
@@ -85,6 +113,12 @@ lam :: Eq a => [a] -> Expr' a -> Expr' a
 lam [] b = b
 lam bs b = Lam (abstr b)
   where abstr = abstract (`elemIndex` bs)
+
+alt :: Eq a => Either a Lit -> Expr' a -> Alt Expr' a
+alt mn expr =
+  case mn of
+    Right l -> Alt (PLit l) $ Scope (F . V <$> expr)
+    Left  n -> Alt PVar $ abstract1 n expr
 
 -- lexer
 
@@ -130,13 +164,28 @@ commaSep = flip sepBy (symbol ",")
 parseLit =
   Int . fromInteger <$> integer
   <|> Float <$> float
-  <|> Char <$> charLit
+  -- <|> Char <$> charLit
 
 parseLam = do
   args <- parseArgs lowIdentifier
   symbol "->"
   e <- parseExpr
   return $ lam args e
+
+parseCase = do
+  symbol "case"
+  e <- parseExpr
+  symbol "of"
+  alts <- commaSep $ do
+    p <- parsePat
+    symbol "->"
+    body <- parseExpr
+    return $ alt p body
+  return $ Case e alts
+  where
+    parsePat =
+      (Right <$> parseLit)
+      <|> (Left <$> lowIdentifier)
 
 parseArgs :: Parser a -> Parser [a]
 parseArgs = parens . commaSep
@@ -154,6 +203,7 @@ parseExpr =
     symbol "in"
     next <- parseExpr
     return $ let_ xs next
+  <|> parseCase
   <|> try (do
     -- n <- parseExpr
     n <- lowIdentifier
@@ -222,13 +272,26 @@ eval = \case
     where es = map inst bs
           inst = instantiate (es !!)
   Lam e -> Lam e
+  Case _ [] -> error "non-exhaustive case"
+  Case e ((Alt pat sc):alts) ->
+    case eval e of
+      Lit l -> case matches pat l of
+                 False -> eval (Case (Lit l) alts)
+                 _ -> eval $ instantiate1 (Lit l) sc
+      _ -> error "e in case not a lit"
+
+matches :: Pat -> Lit -> Bool
+matches (PLit l) lit = l == lit
+matches _ _ = True
+
+mainParse = between sc eof parseExpr
 
 main :: IO ()
 main = run "test"
 
 run file = do
   c <- T.readFile file
-  p <- case parse parseExpr file c of
+  p <- case parse mainParse file c of
          Right x -> return x
          Left x -> do
            putStrLn $ parseErrorPretty' c x
@@ -237,7 +300,9 @@ run file = do
   print p
   let e = eval p
 
-  print e
+  case e of
+    Lit l -> print l
+    _ -> putStrLn "not a lit"
 
   -- final <- S.evalStateT e prelude
   -- case final of

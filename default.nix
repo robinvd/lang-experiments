@@ -1,7 +1,7 @@
 {system ? builtins.currentSystem}:
 let
   pkgs = import <nixpkgs> {inherit system; };
-  myCall = pkgs.lib.callPackageWith (pkgs // pkgs.haskellPackages // jobs);
+  myCall = pkgs.lib.callPackageWith (pkgs // pkgs.haskell.packages.ghc822 // jobs);
 
   callCabal2nix = pkgs.haskellPackages.callCabal2nix;
   myCallCabal2nix = name: src: args: if builtins.typeOf src != "path"

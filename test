@@ -1,6 +1,4 @@
-let x = 5
-  , y = 1
-  , l = (a,b) -> add(a,add(b,2))
-  , sub = (a,b) -> add(a,neg(b))
-  , fac = (n) -> mult(n, sub(n,1))
-  in l(x,y)
+let sub = (a,b) -> add(a,neg(b))
+  , fac = (n) -> case n of 0 -> 1
+                         , x -> mult(fac(sub(n,1)),n)
+  in fac(10)
