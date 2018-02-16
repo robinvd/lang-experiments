@@ -46,17 +46,12 @@ data Pat
   = PVar
   | PLit Lit
   -- | PWild
-  deriving (Show, Eq, Ord, Read) -- Traversable, Functor, Foldable)
+  deriving (Show, Eq, Ord, Read)
 
--- deriveEq1   ''Alt
 instance Monad f => Eq1 (Alt f)
 instance Monad f => Ord1 (Alt f)
--- deriveOrd1  ''Alt
 instance Bound Alt where
   Alt p b >>>= f = Alt p (b >>>= f)
--- instance (Monad f, Eq a) => Eq (Alt f a) where (==) = eq1
--- instance (Monad f, Ord a) => Ord (Alt f a) where compare = compare1
--- instance (Monad f, Read a) => Read (Alt f a) where readsPrec = readsPrec1
 instance (Monad f, Show1 f) => Show1 (Alt f) where
   liftShowsPrec sp a d (Alt pat sc) cont = 
     "Alt (" ++ show pat ++ ") (" ++ (liftShowsPrec sp a d sc (")" ++ cont))
@@ -68,17 +63,7 @@ data Expr' a
   | Let [Scope Int Expr' a] (Scope Int Expr' a)
   | Lam (Scope Int Expr' a)
   | Case (Expr' a) [Alt Expr' a]
-  -- deriving (Show, Show1, Eq,Ord,Functor,Foldable,Traversable)
   deriving (Traversable, Functor, Foldable)
-
--- instance (Show a) => Show (Expr' a) where
---   show = \case
---     Call n args -> show n ++ show args
---     Lit l -> show l
---     V a -> show a
---     Let lets body -> ""
---     Lam sc -> ""
---     Case e alts -> "Case" ++ show e ++ "of" ++ show alts
 
 instance Applicative Expr' where
   pure = V
@@ -100,7 +85,6 @@ deriveShow1  ''Expr'
 
 instance Eq a => Eq (Expr' a) where (==) = eq1
 instance Ord a => Ord (Expr' a) where compare = compare1
--- instance Show a => Show (Expr' a)
 instance Show a => Show (Expr' a) where showsPrec = showsPrec1
 
 
@@ -213,14 +197,11 @@ parseExpr =
   <|> V <$> lowIdentifier
   <|> Lit <$> parseLit
 
+mainParse = between sc eof parseExpr
+
 -- prelude
 
-data Fs
-  = External ([Fs] -> Fs)
-  | FLit Lit
-type Env = M.Map Text ([Expr] -> Expr)
-
-prelude :: Env
+prelude :: M.Map Text ([Expr] -> Expr)
 prelude = M.fromList $ 
 
   [ ("add", litf (+) (+))
@@ -236,22 +217,16 @@ prelude = M.fromList $
       litf1 _ f [(Lit (Float b))] = Lit $ Float $ f  b
       litf1 _ _ _ = error "not valid types"
 
--- eval
-
 lookup :: Text -> [Expr] -> Expr
 lookup n = do
   case M.lookup n prelude of
     Just e -> e
     Nothing -> error $ "lookup of " ++ show n ++ " failed"
 
--- whnf :: Expr -> Expr
--- whnf = \case
-  -- Call f a -> do
-  --   x <- whnf f
-  --   case x of
-  --     Lam b -> whnf (instantiate1 a b)
-  --     f' -> App f' a
-  -- x -> x
+-- eval
+
+-- typeCheck :: Expr -> Bool
+-- typeCheck 
 
 eval :: Expr -> Expr
 eval = \case
@@ -284,8 +259,6 @@ matches :: Pat -> Lit -> Bool
 matches (PLit l) lit = l == lit
 matches _ _ = True
 
-mainParse = between sc eof parseExpr
-
 main :: IO ()
 main = run "test"
 
@@ -298,14 +271,4 @@ run file = do
            error "failed parsing"
 
   print p
-  let e = eval p
-
-  case e of
-    Lit l -> print l
-    _ -> putStrLn "not a lit"
-
-  -- final <- S.evalStateT e prelude
-  -- case final of
-  --   FLit l -> print l
-  --   External _ -> putStrLn "fn"
-
+  print $ eval p
