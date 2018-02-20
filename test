@@ -1,6 +1,11 @@
-let sub = (a,b) -> add(a,neg(b))
-  , fib = (n) -> case n of
-      0 -> 0,
-      1 -> 1,
-      x -> add(fib(sub(x,1)), fib(sub(x,2)))
-  in fib(5)
+/* let sub = (a,b) -> add(a,neg(b)) */
+/*   , fib = (n) -> case n of */
+/*       0 -> 0, */
+/*       1 -> 1, */
+/*       x -> add(fib(sub(x,1)), fib(sub(x,2))) */
+/*   in fib(5) */
+let x = case 5 of
+  1 -> 2
+  ,5 -> 1
+  ,x -> x
+in add(x,1)
