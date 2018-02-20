@@ -285,6 +285,7 @@ instance Substitutable Type where
   apply subst (TFunc a r) = TFunc (map (apply subst) a) (apply subst r)
 
   ftv (Type _) = S.empty
+  ftv (TVar a) = S.singleton a
   ftv (TFunc a r) = foldr S.union S.empty (map ftv a) `S.union` ftv r
 
 instance Substitutable Scheme where
