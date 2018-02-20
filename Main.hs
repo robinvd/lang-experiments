@@ -246,28 +246,15 @@ data Err
 data Scheme = Forall [TVar] Type deriving (Show)
 type Subst = M.Map TVar Type
 newtype TypeEnv = TypeEnv {types :: (M.Map Text Scheme)} deriving (Monoid)
-remove :: TypeEnv -> Text -> TypeEnv
-remove (TypeEnv env) var = TypeEnv (M.delete var env)
-
 type Constraint = (Type, Type)
 type Unifier = (Subst, [Constraint])
 
-extends :: TypeEnv -> [(Text, Scheme)] -> TypeEnv
-extends env xs = env { types = M.union (M.fromList xs) (types env) }
-
-extend :: TypeEnv -> (Text, Scheme) -> TypeEnv
-extend env (x, s) = env { types = M.insert x s (types env) }
-
 newtype Unique = Unique {count :: Int}
--- type Infer a = ExceptT Err (S.State Unique) a
 
 type Infer a = (R.ReaderT
-                  TypeEnv             -- Typing environment
-                  (S.StateT         -- Inference state
-                  Unique
-                  (Except         -- Inference errors
-                    Err))
-                   a) -- Result
+                  TypeEnv
+                  (S.StateT Unique (Except Err))
+                  a)
 
 runInfer :: TypeEnv -> Infer (Type, [Constraint]) -> Either Err (Type, [Constraint])
 runInfer env m = runExcept $ S.evalStateT (R.runReaderT m env) (Unique 0)
@@ -327,12 +314,6 @@ fresh = do
   S.put s{count = count s + 1}
   return $ TVar $ TV (letters !! count s)
 
-instantiateT :: Scheme -> Infer Type
-instantiateT (Forall as t) = do
-  as' <- mapM (const fresh) as
-  let s = M.fromList $ zip as as'
-  return $ apply s t
-
 generalize :: TypeEnv -> Type -> Scheme
 generalize env t  = Forall as t
     where as = S.toList $ ftv t `S.difference` ftv env
@@ -352,16 +333,6 @@ normalize (Forall _ body) = Forall (map snd ord) (normtype body)
       case L.lookup a ord of
         Just x -> TVar x
         Nothing -> error "type variable not in signature"
-
--- | Extend type environment
-inEnv :: [(Text, Scheme)] -> Infer a -> Infer a
--- inEnv (x, sc) m = do
---   let scope e = (remove e x) `extend` (x, sc)
---   R.local scope m
-inEnv xs m = do
-  let scope e = foldr (\(x,sc) a -> remove a x `extend` (x,sc)) e xs
-
-  R.local scope m
 
 tupleToInner :: [(a,b)] -> ([a],[b])
 tupleToInner = foldr (\(x,y) (xs,ys) -> (x:xs, y:ys)) ([],[])
@@ -519,7 +490,6 @@ run file = do
            error "failed parsing"
 
   print p
-  -- print $ typeCheck (fst . lookup <$> p)
   let t = inferExpr mempty (fst . lookup <$> p) 
       e = t >> eval (snd . lookup <$> p)
   
