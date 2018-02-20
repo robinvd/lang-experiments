@@ -14,7 +14,6 @@ import qualified Control.Monad.State as S
 import qualified Control.Monad.Reader as R
 import Control.Monad.Identity
 import qualified Data.List as L
-import qualified Data.Maybe as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Text (Text)
@@ -22,7 +21,6 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Bound
-import Bound.Scope
 import Data.List hiding (lookup)
 import Control.Applicative
 import Data.Functor.Classes
@@ -128,6 +126,9 @@ symbol = L.symbol sc
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
+braces :: Parser a -> Parser a
+braces = between (symbol "{") (symbol "}")
+
 integer :: Parser Int
 integer = lexeme L.decimal
 
@@ -166,13 +167,13 @@ parseLam = do
 parseCase = do
   symbol "case"
   e <- parseExpr
-  symbol "of"
-  alts <- commaSep $ do
-    p <- parsePat
-    symbol "->"
-    body <- parseExpr
-    return $ alt p body
-  return $ Case e alts
+  braces $ do
+    alts <- many $ do
+      p <- parsePat
+      symbol "->"
+      body <- parseExpr
+      return $ alt p body
+    return $ Case e alts
   where
     parsePat =
       (Right <$> parseLit)
@@ -186,7 +187,7 @@ parseExpr :: Parser Expr
 parseExpr =
   do
     symbol "let"
-    xs <- commaSep $ do
+    xs <- many $ try $ do
       n <- lowIdentifier
       symbol "="
       val <- parseExpr
