@@ -32,6 +32,7 @@ library
     Typechecker
     Interpreter
     Run
+    Lower
   other-modules:
 executable scripter
   main-is:             Main.hs
