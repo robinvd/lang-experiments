@@ -48,7 +48,7 @@ run file = do
            putStrLn $ parseErrorPretty' c x
            error "failed parsing"
 
-  print p
+  -- print p
   let t = ExceptT $ pure $ inferExpr mempty (fst . lookup <$> p)
       e = t >> eval (snd . lookup <$> p)
 
