@@ -1,6 +1,9 @@
 {system ? builtins.currentSystem}:
 let
-  pkgs = import <nixpkgs> {inherit system; };
+  nixpkgs = fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.03.tar.gz;
+  pkgs = import nixpkgs { config = {}; };
+
+  # pkgs = import <nixpkgs> {inherit system; };
   myCall = pkgs.lib.callPackageWith (pkgs // pkgs.haskell.packages.ghc822 // jobs);
 
   callCabal2nix = pkgs.haskellPackages.callCabal2nix;
@@ -32,14 +35,7 @@ let
     llvm-hs-pretty = myCall s {};
     llvm-hs = myCall ./llvm-hs.nix {};
     llvm-hs-pure = myCall ./llvm-hs-pure.nix {};
-    megaparsec = myCallCabal2nix "megaparsec" (
-      pkgs.fetchFromGitHub {
-        owner = "mrkkrp";
-        repo = "megaparsec";
-        rev = "0754936634aa5e01efbe12aaeb70c61d217d4210";
-        sha256 = "0bl2717zjr59mff6ch0726llsyn1c38vr0nqvg8w1im05310hvxh";
-      }
-    ) {};
+    megaparsec = myCall ./megaparsec.nix {};
 
   };
   rlang = myCall ./app.nix {};

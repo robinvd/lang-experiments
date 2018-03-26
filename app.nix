@@ -1,5 +1,5 @@
-{ mkDerivation, base, bound, containers, deriving-compat
-, megaparsec, mtl, optparse-applicative, stdenv, text
+{ mkDerivation, base, bound, containers, deriving-compat, llvm-hs
+, llvm-hs-pure, megaparsec, mtl, optparse-applicative, stdenv, text
 }:
 mkDerivation {
   pname = "scripter";
@@ -8,7 +8,8 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base bound containers deriving-compat megaparsec mtl text
+    base bound containers deriving-compat llvm-hs llvm-hs-pure
+    megaparsec mtl text
   ];
   executableHaskellDepends = [
     base containers mtl optparse-applicative text

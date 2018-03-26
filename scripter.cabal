@@ -26,13 +26,19 @@ library
                      , mtl
                      , bound
                      , deriving-compat
+                     , llvm-hs
+                     , llvm-hs-pure
+                     , bytestring
   exposed-modules:
+    Codegen
     Core
+    Emit
+    Interpreter
+    Lower
     Parser
     Typechecker
-    Interpreter
     Run
-    Lower
+    Type
   other-modules:
 executable scripter
   main-is:             Main.hs
