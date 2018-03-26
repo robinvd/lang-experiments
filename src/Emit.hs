@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Emit where
 
@@ -6,6 +7,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           LLVM.AST                   hiding (function)
 import qualified LLVM.AST                   as AST
+import LLVM.AST.Float
 import qualified LLVM.AST.CallingConvention as CC
 import           LLVM.AST.Constant as C
 import           LLVM.AST.Global
@@ -16,15 +18,27 @@ import Control.Monad.State hiding (void)
 
 -- import           Codegen
 import qualified Core                       as Core
+import qualified Type as T
 
 newtype Supply = Supply Word
 
-runEmit :: Core.Expr' Text -> AST.Module
+runEmit :: Core.Expr' T.Name -> AST.Module
 runEmit core = buildModule "main" $ evalStateT (setup >> convert core) (Supply 0)
 
-convert core = return ()
+convertLit :: (MonadState Supply m, MonadModuleBuilder m) 
+           => Core.Lit -> m Constant
+convertLit = \case
+  Core.Int i -> return $ Int 64 $ toInteger i
+  -- Core.Float f -> return $ Float $ Double f
+  Core.Char c -> return $ Int 8 $ toInteger $ fromEnum c
+  _ -> error "not done yet"
 
-str = Array i8 $ map (Int 8 . toInteger . fromEnum) "test"
+convert :: (MonadState Supply m, MonadModuleBuilder m) 
+        => Core.Expr' T.Name -> m Operand
+convert = \case 
+  Core.Lit l -> ConstantOperand <$> convertLit l
+  _ -> pure $ ConstantOperand $ Int 64 0
+    -- emitInstr (typeOf const) (ConstantOperand const)
 
 freshGlobal :: MonadState Supply m => m Name
 freshGlobal = do
@@ -52,13 +66,8 @@ mkPrelude = do
 
 setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 setup = do
-  -- emitDefn $ GlobalDefinition globalVariableDefaults
-  --   { name = "str"
-  --   , LLVM.AST.Global.type' = ArrayType 5 i8
-  --   , isConstant = True
-  --   , initializer = Just str}
-  str <- mkString "hello world\0"
   mkPrelude
+  str <- mkString "hello world\0"
   function "main" [] void $ buildMain str
   return ()
 
@@ -70,7 +79,6 @@ buildMain str _ = do
       exitT = ptr $ FunctionType void [] False
       puts = toF "puts" void [ptr i8]
       fflush = toF "fflush" void [ptr i8]
-      arg = (ConstantOperand $ GlobalReference (ptr $ ArrayType 5 i8) $ mkName "str", [])
       null = (ConstantOperand $ C.IntToPtr (Int 8 0) (ptr i8), [])
 
   emitInstrVoid $ Call Nothing CC.C [] puts [(str, [])] [] []

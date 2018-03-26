@@ -1,5 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE LambdaCase               #-}
+{-# LANGUAGE OverloadedStrings        #-}
 module Run where
 
 import           Prelude              hiding (lookup)
@@ -11,11 +12,12 @@ import qualified Data.Text.IO         as T
 import           Text.Megaparsec      (parse, parseErrorPretty')
 
 import           Core
+import           Emit
 import           Interpreter
 import           Parser
+import           Rename
+import           Type
 import           Typechecker
-
-import           Emit
 
 import           Data.Int
 import           Data.Word
@@ -39,38 +41,45 @@ import           LLVM.Module
 
 foreign import ccall "dynamic" haskFun :: FunPtr (IO Int) -> (IO Int)
 
+liftMaybe :: Monad m => Maybe a -> ExceptT Err m a
+liftMaybe m = case m of
+                Just x  -> liftEither $ Right x
+                Nothing -> liftEither $ Left $ RunError "result is a func"
+
+total fileName = do
+  p <- ExceptT (parseText fileName <$> T.readFile fileName)
+  t <- liftEither . inferExpr mempty $ fst . lookup <$> p
+  e <- eval (snd . lookup <$> p)
+  eres <- liftMaybe $ closed e
+  liftIO $ print (eres :: Expr)
+  liftIO $ print $ rename p
+  llvmres <- llvm $ rename p
+  liftIO $ print llvmres
+
+
+
 run :: String -> IO ()
 run file = do
-  c <- T.readFile file
-  p <- case parse mainParse file c of
-         Right x -> return x
-         Left x -> do
-           putStrLn $ parseErrorPretty' c x
-           error "failed parsing"
+  t <- runExceptT $ total file
+  case t of
+    Left err -> putStrLn "err"
+    Right _  -> putStrLn "succes"
 
-  -- print p
-  let t = ExceptT $ pure $ inferExpr mempty (fst . lookup <$> p)
-      e = t >> eval (snd . lookup <$> p)
-
-  -- print t
-  runExceptT e >>= \case
-    Left err -> print err
-    Right x -> case closed x of
-      Just x  -> print (x :: Expr)
-      Nothing -> putStrLn "end not a lit"
-
-  let ast = runEmit undefined
-
-  putStrLn "start llvm"
-  withContext $ \c -> jit c $ \mcjit ->
-    withModuleFromAST c ast $ \bc ->
-      EE.withModuleInEngine mcjit bc $ \em -> do
-        mf <- EE.getFunction em (AST.mkName "main")
-        case mf of
-          Just f  -> haskFun (castFunPtr f :: FunPtr (IO Int))
-          Nothing -> error "no main"
-  putStrLn "done"
-
+llvm :: Core () Name -> ExceptT Err IO Int
+llvm core = do
+  let ast = runEmit core
+  e <- liftIO $ do
+    putStrLn "start llvm"
+    ret <- withContext $ \c -> jit c $ \mcjit ->
+      withModuleFromAST c ast $ \bc ->
+        EE.withModuleInEngine mcjit bc $ \em -> do
+          mf <- EE.getFunction em (AST.mkName "main")
+          case mf of
+            Just f  -> Right <$> haskFun (castFunPtr f :: FunPtr (IO Int))
+            Nothing -> pure $ Left $ RunError "no main"
+    putStrLn "done"
+    return ret
+  liftEither e
 
 jit :: Context -> (EE.MCJIT -> IO a) -> IO a
 jit c = EE.withMCJIT c optlevel model ptrelim fastins

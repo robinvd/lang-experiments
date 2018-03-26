@@ -36,6 +36,7 @@ library
     Interpreter
     Lower
     Parser
+    Rename
     Typechecker
     Run
     Type

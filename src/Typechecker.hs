@@ -1,23 +1,26 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveFoldable    #-}
+{-# LANGUAGE DeriveFunctor     #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE LambdaCase        #-}
 module Typechecker where
 
-import Bound
-import Control.Monad.Except
-import qualified Control.Monad.State as S
-import qualified Control.Monad.Reader as R
-import Control.Monad.Identity
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.List as L
-import Data.List (nub)
+import           Bound
+import           Control.Monad.Except
+import           Control.Monad.Identity
+import qualified Control.Monad.Reader   as R
+import qualified Control.Monad.State    as S
+import           Data.Bifunctor
+import           Data.List              (nub)
+import qualified Data.List              as L
+import qualified Data.Map               as M
+import qualified Data.Set               as S
+import           Data.Text              (Text)
+import qualified Data.Text              as T
 
-import Type
-import Core
+import           Core
+import           Type
 
 typeLit :: Lit -> Type
 typeLit = \case
@@ -37,15 +40,15 @@ type Infer a = (R.ReaderT
                   (S.StateT Unique (Except Err))
                   a)
 
-runInfer :: TypeEnv -> Infer (Type, [Constraint]) -> Either Err (Type, [Constraint])
+runInfer :: TypeEnv -> Infer a -> Either Err a
 runInfer env m = runExcept $ S.evalStateT (R.runReaderT m env) (Unique 0)
 
-inferExpr :: TypeEnv -> Expr' Type -> Either Err Scheme
+inferExpr :: TypeEnv -> Core a Type -> Either Err (Core Scheme Type)
 inferExpr env ex = case runInfer env (infer ex) of
   Left err -> Left err
-  Right (ty, cs) -> case runSolve cs of
-    Left err -> Left err
-    Right subst -> Right $ closeOver $ apply subst ty
+  Right (core, ty, cs) -> case runSolve cs of
+    Left err    -> Left err
+    Right subst -> Right $ first (closeOver . apply subst) core
 
 closeOver :: Type -> Scheme
 closeOver = normalize . generalize (TypeEnv M.empty)
@@ -61,12 +64,12 @@ class Substitutable a where
   ftv   :: a -> S.Set TVar
 
 instance Substitutable Type where
-  apply subst (Type t) = Type t
-  apply subst (TVar v) = M.findWithDefault (TVar v) v subst
+  apply subst (Type t)    = Type t
+  apply subst (TVar v)    = M.findWithDefault (TVar v) v subst
   apply subst (TFunc a r) = TFunc (map (apply subst) a) (apply subst r)
 
-  ftv (Type _) = S.empty
-  ftv (TVar a) = S.singleton a
+  ftv (Type _)    = S.empty
+  ftv (TVar a)    = S.singleton a
   ftv (TFunc a r) = foldr S.union S.empty (map ftv a) `S.union` ftv r
 
 instance Substitutable Scheme where
@@ -87,6 +90,16 @@ instance Substitutable TypeEnv where
   apply subst (TypeEnv env) = TypeEnv $ fmap (apply subst) env
   ftv (TypeEnv env) = ftv $ M.elems env
 
+-- instance Substitutable t => Substitutable (Core t t) where
+--   apply subst = \case
+--     Call t a b -> Call (apply subst t) a b
+--     Lit l -> Lit l
+--     V a -> V $ apply subst a
+--     Let t i ts ls body ->
+--       Let (apply subst t) i (map (apply subst) ls) (apply subst body)
+--   ftv expr = undefined
+
+
 letters :: [Text]
 letters = fmap T.pack $ [1..] >>= flip replicateM ['a'..'z']
 
@@ -105,7 +118,7 @@ normalize (Forall _ body) = Forall (map snd ord) (normtype body)
   where
     ord = zip (nub $ fv body) (map TV letters)
 
-    fv (TVar a)   = [a]
+    fv (TVar a)    = [a]
     fv (TFunc a b) = concatMap fv a ++ fv b
     fv (Type _)    = []
 
@@ -113,53 +126,62 @@ normalize (Forall _ body) = Forall (map snd ord) (normtype body)
     normtype (Type a)   = Type a
     normtype (TVar a)   =
       case L.lookup a ord of
-        Just x -> TVar x
+        Just x  -> TVar x
         Nothing -> error "type variable not in signature"
 
 tupleToInner :: [(a,b)] -> ([a],[b])
 tupleToInner = foldr (\(x,y) (xs,ys) -> (x:xs, y:ys)) ([],[])
 
-infer :: Expr' Type -> Infer (Type, [Constraint])
+trippleToInner :: [(a,b,c)] -> ([a],[b],[c])
+trippleToInner = foldr (\(x,y,z) (xs,ys,zs) -> (x:xs, y:ys, z:zs)) ([],[],[])
+
+infer :: Core a Type -> Infer (Core Type Type, Type, [Constraint])
 infer = \case
-  Lit l -> pure (typeLit l, [])
-  V t -> pure (t, [])
-  Call n as -> do
-    (t1, c1) <- infer n
+  Lit l -> pure (Lit l, typeLit l, [])
+  V t -> pure (V t, t, [])
+  Call _ n as -> do
+    (e1, t1, c1) <- infer n
     x <- mapM infer as
-    let t2 = map fst x
-        c2 = concatMap snd x
+    let e2 = map (\(a,_,_) -> a) x
+        t2 = map (\(_,a,_) -> a) x
+        c2 = concatMap (\(_,_,a) -> a) x
     tv <- fresh
-    pure (tv, c1 ++ c2 ++ [(t1, TFunc t2 tv)])
-  Lam i sc -> do
+    pure (Call tv e1 e2, tv, c1 ++ c2 ++ [(t1, TFunc t2 tv)])
+  Lam _ i sc -> do
     tv <- fresh
     tvargs <- replicateM i fresh
     let e = instantiate (V . (tvargs !!)) sc
 
-    (t, c) <- infer e
-    return (TFunc tvargs t, c)
-  Let i letsSc sc -> do
+    (e, t, c) <- infer e
+    let thisT = TFunc tvargs t
+
+    -- core is wrong
+    return (e, thisT, c)
+  Let _ i _ letsSc sc -> do
     tvis <- replicateM i fresh
     let lets = map (instantiate (V . (tvis !!))) letsSc
         expr = instantiate (V . (tvis !!)) sc
 
-    (tls, lcs) <- tupleToInner <$> mapM infer lets
-    (te, tc) <- infer expr
+    (c, tls, lcs) <- trippleToInner <$> mapM infer lets
+    (ce, te, tc) <- infer expr
 
-    pure (te, concat lcs ++ tc)
-  Case e alts -> do
+    -- ce is wrong
+    pure (ce,te, concat lcs ++ tc)
+  Case _ e _ alts -> do
     tv <- fresh
-    (et, ec) <- infer e
+    (ne, et, ec) <- infer e
     patConstr <- mapM (inferAltPat et tv) alts
-    pure (tv, concat patConstr ++ ec)
+    -- ne is wrong
+    pure (ne, tv, concat patConstr ++ ec)
       where
-        inferAltPat :: Type -> Type -> Alt Expr' Type -> Infer ([Constraint])
+        inferAltPat :: Type -> Type -> Alt (Core a) Type -> Infer ([Constraint])
         inferAltPat patBase eBase (Alt pat sc) = do
           patTV <- case pat of
                          PLit l -> pure $ typeLit l
-                         PVar -> fresh
+                         PVar   -> fresh
           let expr = instantiate1 (V patTV) sc
 
-          (t,c) <- infer expr
+          (ne, t,c) <- infer expr
           pure (c ++ [(patBase, patTV), (eBase,t)])
 
 
@@ -167,11 +189,11 @@ infer = \case
 type Solve a = ExceptT Err Identity a
 
 unifies :: Type -> Type -> Solve Subst
-unifies t1 t2 | t1 == t2 = return mempty
-unifies (TVar v) t = v `bind` t
-unifies t (TVar v) = v `bind` t
+unifies t1 t2                       | t1 == t2 = return mempty
+unifies (TVar v) t                  = v `bind` t
+unifies t (TVar v)                  = v `bind` t
 unifies (TFunc a1 r1) (TFunc a2 r2) = unifyMany (r1:a1) (r2:a2)
-unifies t1 t2 = throwError $ TypeError t1 t2
+unifies t1 t2                       = throwError $ TypeError t1 t2
 
 unifyMany :: [Type] -> [Type] -> Solve Subst
 unifyMany [] [] = return mempty

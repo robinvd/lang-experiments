@@ -1,37 +1,28 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable       #-}
+{-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE DeriveTraversable    #-}
 module Core where
 
-import Bound
+import           Bound
 -- import Control.Applicative
-import Control.Monad (ap)
-import Data.Deriving
-import Data.List (elemIndex)
-import Data.Text (Text)
-import Data.Functor.Classes
-import Control.Monad.Except
+import           Control.Monad        (ap)
+import           Control.Monad.Except
+import           Data.Bifunctor
+import           Data.Deriving
+import           Data.Functor.Classes
+import           Data.List            (elemIndex)
+import           Data.Text            (Text)
 
-import Type
+import           Type
 
 type Func = [Lit] -> ExceptT Err IO Lit
-data Err
-  = TypeError Type Type
-  | UnificationMismatch [Type] [Type]
-  | InfiniteType TVar Type
-  | TypeText Text
-  | NotFoundError Text
-  | DublicateError Text
-  | ParseError
-  | RunError Text
-  | InternalErr
-  deriving (Show)
-
 
 data Lit
   = Int Int
@@ -54,50 +45,59 @@ instance Monad f => Ord1 (Alt f)
 instance Bound Alt where
   Alt p b >>>= f = Alt p (b >>>= f)
 instance (Monad f, Show1 f) => Show1 (Alt f) where
-  liftShowsPrec sp a d (Alt pat sc) cont = 
+  liftShowsPrec sp a d (Alt pat sc) cont =
     "Alt (" ++ show pat ++ ") (" ++ liftShowsPrec sp a d sc (")" ++ cont)
 
-data Expr' a
-  = Call (Expr' a) [Expr' a]
+data Core t a
+  = Call t (Core t a) [Core t a]
   | Lit Lit
   | V a
-  | Let Int [Scope Int Expr' a] (Scope Int Expr' a)
-  | Lam Int (Scope Int Expr' a)
-  | Case (Expr' a) [Alt Expr' a]
+  | Let t Int [t] [Scope Int (Core t) a] (Scope Int (Core t) a)
+  | Lam t Int  (Scope Int (Core t) a)
+  | Case t (Core t a) t [Alt (Core t) a]
   deriving (Traversable, Functor, Foldable)
 
-instance Applicative Expr' where
+instance Bifunctor Core where
+  second = fmap
+  first f = \case
+    Call t a b -> Call (f t) (first f a) (map (first f) b)
+
+type Expr' = Core ()
+
+instance Applicative (Core t) where
   pure = V
   (<*>) = ap
-instance Monad Expr' where
+instance Monad (Core t) where
   return = V
-  Call x y >>= f = Call (x >>= f) (map (>>= f) y)
+  Call t x y >>= f = Call t (x >>= f) (map (>>= f) y)
   Lit l >>= _ = Lit l
   V a >>= f = f a
-  Let i ls e >>= f = Let i (map (>>>= f) ls) (e >>>= f)
-  Lam i e >>= f = Lam i (e >>>= f)
-  Case e alts >>= f = Case (e >>= f) (map (>>>= f) alts)
+  Let t i ts ls e >>= f = Let t i ts (map (>>>= f) ls) (e >>>= f)
+  Lam t i e >>= f = Lam t i (e >>>= f)
+  Case t e at alts >>= f = Case t (e >>= f) at (map (>>>= f) alts)
 
 
 type Expr = Expr' Text
 
-deriveEq1   ''Expr'
-deriveOrd1  ''Expr'
-deriveShow1  ''Expr'
+deriveEq1   ''Core
+deriveOrd1  ''Core
+deriveShow1  ''Core
 
-instance Eq a => Eq (Expr' a) where (==) = eq1
-instance Ord a => Ord (Expr' a) where compare = compare1
-instance Show a => Show (Expr' a) where showsPrec = showsPrec1
+instance (Eq t,Eq a) => Eq (Core t a) where (==) = eq1
+
+instance (Ord t,Ord a) => Ord (Core t a) where compare = compare1
+
+instance (Show t,Show a) => Show (Core t a) where showsPrec = showsPrec1
 
 
 let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
 let_ [] b = b
-let_ bs b = Let (length bs) (map (abstr . snd) bs) (abstr b)
+let_ bs b = Let () (length bs) [] (map (abstr . snd) bs) (abstr b)
   where abstr = abstract (`elemIndex` map fst bs)
 
 lam :: Eq a => [a] -> Expr' a -> Expr' a
 lam [] b = b
-lam bs b = Lam (length bs) (abstr b)
+lam bs b = Lam () (length bs) (abstr b)
   where abstr = abstract (`elemIndex` bs)
 
 alt :: Eq a => Either a Lit -> Expr' a -> Alt Expr' a

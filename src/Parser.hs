@@ -1,15 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Parser where
 
-import Data.Text (Text)
-import qualified Data.Text as T
-
-import Data.Void
-import Text.Megaparsec hiding (match, count)
-import Text.Megaparsec.Char
+import           Data.Bifunctor
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+import           Data.Void
+import           Text.Megaparsec            hiding (count, match)
+import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Core
+import           Core
+import           Type                       (Err (..))
+
 type Parser = Parsec Void Text
 
 sc :: Parser ()
@@ -74,7 +76,7 @@ parseCase = do
       symbol "->"
       body <- parseExpr
       return $ alt p body
-    return $ Case e alts
+    return $ Case () e () alts
   where
     parsePat =
       (Right <$> parseLit)
@@ -101,11 +103,12 @@ parseExpr =
     -- n <- parseExpr
     n <- lowIdentifier
     args <- parseArgs parseExpr
-    return $ Call (V n) args)
+    return $ Call () (V n) args)
   <|> parseLam
   <|> V <$> lowIdentifier
   <|> Lit <$> parseLit
 
 mainParse = between sc eof parseExpr
 
-
+parseText :: String -> Text -> Either Err (Core () Text)
+parseText fileName t = first ParseError $ parse mainParse fileName t

@@ -13,7 +13,7 @@ import Type
 type Run = ExceptT Err IO
 eval :: Expr' Func -> Run (Expr' Func)
 eval = \case
-  Call n args -> do
+  Call t n args -> do
     let toLit (Lit l) = l
 
     eArgs <- map toLit <$> mapM (eval) args
@@ -23,24 +23,24 @@ eval = \case
        Lit _ -> throwError InternalErr
        x -> do
          n' <- eval n
-         eval $ Call n' args
+         eval $ Call t n' args
 
   Lit x -> pure $ Lit x
   V x -> pure $ V x
-  Let i bs b -> eval (inst b)
+  Let _ i _ bs b -> eval (inst b)
     where es = map inst bs
           inst = instantiate (es !!)
-  Lam _ l -> pure $ V $ (\args ->
+  Lam _ _ l -> pure $ V $ (\args ->
     let eArgs = map Lit args
         inst = instantiate (eArgs !!)
         newE = inst l
         toLit (Lit l) = l
      in toLit <$> (eval (newE)))
-  Case _ [] -> error "non-exhaustive case"
-  Case e ((Alt pat sc):alts) ->
+  Case _ _ _ [] -> error "non-exhaustive case"
+  Case et e at ((Alt pat sc):alts) ->
     eval e >>= \case
       Lit l -> case matches pat l of
-                 False -> eval (Case (Lit l) alts)
+                 False -> eval (Case et (Lit l) at alts)
                  _ -> eval $ instantiate1 (Lit l) sc
       _ -> error "e in case not a lit"
 
