@@ -54,6 +54,7 @@ prelude :: M.Map Text (Type, Func)
 prelude = M.fromList $
 
   [ ("add", (intf2,litf (+)))
+  , ("sub", (intf2,litf (-)))
   , ("mult", (intf2, litf (*)))
   , ("neg", (intf1, litf1 (negate)))
   , ("prInt", (TFunc [int] unit, prInt))

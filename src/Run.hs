@@ -101,14 +101,14 @@ jit c = EE.withMCJIT c optlevel model ptrelim fastins
 
 passes :: PassSetSpec
 passes = defaultPassSetSpec
-  { transforms =
-    [ AlwaysInline False
-    , FunctionAttributes
-    , FunctionInlining 5
-    , PromoteMemoryToRegister
-    , Reassociate
-    , TailCallElimination
-    , Sinking
-    , InstructionCombining
-    ]
+  { transforms = []
+    -- [ AlwaysInline False
+    -- , FunctionAttributes
+    -- , FunctionInlining 5
+    -- , PromoteMemoryToRegister
+    -- , Reassociate
+    -- , TailCallElimination
+    -- , Sinking
+    -- , InstructionCombining
+    -- ]
   }
