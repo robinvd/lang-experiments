@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass       #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE InstanceSigs         #-}
 {-# LANGUAGE LambdaCase           #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TemplateHaskell      #-}
@@ -35,6 +36,8 @@ data Lit
 data Alt f a = Alt Pat (Scope () f a)
   deriving (Traversable, Functor, Foldable, Ord, Eq, Read)
 
+altModScope f (Alt p sc) = Alt p (f sc)
+
 data Pat
   = PVar
   | PLit Lit
@@ -53,14 +56,25 @@ data Core t a
   | Lit Lit
   | V a
   | Let t Int [t] [Scope Int (Core t) a] (Scope Int (Core t) a)
-  | Lam t Int  (Scope Int (Core t) a)
+  | Lam t Int (Scope Int (Core t) a)
   | Case t (Core t a) t [Alt (Core t) a]
   deriving (Traversable, Functor, Foldable)
 
 instance Bifunctor Core where
   second = fmap
+  first :: (a -> b) -> Core a c -> Core b c
   first f = \case
     Call t a b -> Call (f t) (first f a) (map (first f) b)
+    Lit l -> Lit l
+    V a -> V a
+    Let t i ts sc se ->
+      Let (f t) i (map f ts) (map process sc) (process se)
+    Lam t i sc ->
+      Lam (f t) i $ process sc
+    Case t e armT arms ->
+      Case (f t) (first f e) (f armT) (map (altModScope process) arms)
+    where
+     process = Scope . bimap f (second (first f)) . unscope
 
 type Expr' = Core ()
 
@@ -90,14 +104,14 @@ instance (Ord t,Ord a) => Ord (Core t a) where compare = compare1
 instance (Show t,Show a) => Show (Core t a) where showsPrec = showsPrec1
 
 
-let_ :: Eq a => [(a,Expr' a)] -> Expr' a -> Expr' a
-let_ [] b = b
-let_ bs b = Let () (length bs) [] (map (abstr . snd) bs) (abstr b)
+let_ :: Eq a => t -> [t] -> [(a,Core t a)] -> Core t a -> Core t a
+let_ _ _ [] b = b
+let_ t ts bs b = Let t (length bs) ts (map (abstr . snd) bs) (abstr b)
   where abstr = abstract (`elemIndex` map fst bs)
 
-lam :: Eq a => [a] -> Expr' a -> Expr' a
-lam [] b = b
-lam bs b = Lam () (length bs) (abstr b)
+lam :: Eq a => t -> [a] -> Core t a -> Core t a
+lam _ [] b = b
+lam t bs b = Lam t (length bs) (abstr b)
   where abstr = abstract (`elemIndex` bs)
 
 alt :: Eq a => Either a Lit -> Expr' a -> Alt Expr' a

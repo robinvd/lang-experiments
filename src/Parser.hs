@@ -65,7 +65,7 @@ parseLam = do
   args <- parseArgs lowIdentifier
   symbol "->"
   e <- parseExpr
-  return $ lam args e
+  return $ lam () args e
 
 parseCase = do
   symbol "case"
@@ -97,7 +97,7 @@ parseExpr =
       return (n, val)
     symbol "in"
     next <- parseExpr
-    return $ let_ xs next
+    return $ let_ () [] xs next
   <|> parseCase
   <|> try (do
     -- n <- parseExpr

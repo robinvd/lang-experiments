@@ -27,7 +27,6 @@ typeLit = \case
   Int _ -> int
   Float _ -> float
 
-data Scheme = Forall [TVar] Type deriving (Show)
 type Subst = M.Map TVar Type
 newtype TypeEnv = TypeEnv {types :: (M.Map Text Scheme)} deriving (Monoid)
 type Constraint = (Type, Type)
@@ -43,12 +42,16 @@ type Infer a = (R.ReaderT
 runInfer :: TypeEnv -> Infer a -> Either Err a
 runInfer env m = runExcept $ S.evalStateT (R.runReaderT m env) (Unique 0)
 
-inferExpr :: TypeEnv -> Core a Type -> Either Err (Core Scheme Type)
+inferExpr :: TypeEnv -> Core a (Name,Type) -> Either Err (Core Scheme (Name,Scheme))
 inferExpr env ex = case runInfer env (infer ex) of
   Left err -> Left err
   Right (core, ty, cs) -> case runSolve cs of
     Left err    -> Left err
-    Right subst -> Right $ first (closeOver . apply subst) core
+    Right subst -> Right $
+      bimap
+        (closeOver . apply subst)
+        (\(n,t) -> (n, closeOver $ apply subst t))
+        core
 
 closeOver :: Type -> Scheme
 closeOver = normalize . generalize (TypeEnv M.empty)
@@ -109,6 +112,14 @@ fresh = do
   S.put s{count = count s + 1}
   return $ TVar $ TV (letters !! count s)
 
+freshName :: Infer (Name,Type)
+freshName = do
+  s <- S.get
+  S.put s{count = count s + 1}
+  let n = count s + 1
+
+  return $ (Name n (letters !! n), TVar $ TV (letters !! n))
+
 generalize :: TypeEnv -> Type -> Scheme
 generalize env t  = Forall as t
     where as = S.toList $ ftv t `S.difference` ftv env
@@ -135,10 +146,12 @@ tupleToInner = foldr (\(x,y) (xs,ys) -> (x:xs, y:ys)) ([],[])
 trippleToInner :: [(a,b,c)] -> ([a],[b],[c])
 trippleToInner = foldr (\(x,y,z) (xs,ys,zs) -> (x:xs, y:ys, z:zs)) ([],[],[])
 
-infer :: Core a Type -> Infer (Core Type Type, Type, [Constraint])
+applyScope f = Scope . f . unscope
+
+infer :: Core a (Name, Type) -> Infer (Core Type (Name, Type), Type, [Constraint])
 infer = \case
   Lit l -> pure (Lit l, typeLit l, [])
-  V t -> pure (V t, t, [])
+  V t -> pure (V t, snd t, [])
   Call _ n as -> do
     (e1, t1, c1) <- infer n
     x <- mapM infer as
@@ -149,40 +162,44 @@ infer = \case
     pure (Call tv e1 e2, tv, c1 ++ c2 ++ [(t1, TFunc t2 tv)])
   Lam _ i sc -> do
     tv <- fresh
-    tvargs <- replicateM i fresh
+    tvargs <- replicateM i freshName
     let e = instantiate (V . (tvargs !!)) sc
 
     (e, t, c) <- infer e
-    let thisT = TFunc tvargs t
+    let thisT = TFunc (map snd tvargs) t
 
-    -- core is wrong
-    return (e, thisT, c)
+    return (lam thisT tvargs e, thisT, c)
   Let _ i _ letsSc sc -> do
-    tvis <- replicateM i fresh
+    tvis <- replicateM i freshName
     let lets = map (instantiate (V . (tvis !!))) letsSc
         expr = instantiate (V . (tvis !!)) sc
 
     (c, tls, lcs) <- trippleToInner <$> mapM infer lets
     (ce, te, tc) <- infer expr
 
-    -- ce is wrong
-    pure (ce,te, concat lcs ++ tc)
+    let newExpr = let_ te tls (zip tvis c) ce
+    pure (newExpr ,te, concat lcs ++ tc)
   Case _ e _ alts -> do
-    tv <- fresh
+    tv <- freshName
     (ne, et, ec) <- infer e
-    patConstr <- mapM (inferAltPat et tv) alts
-    -- ne is wrong
-    pure (ne, tv, concat patConstr ++ ec)
+    (patExpr, patConstr) <- tupleToInner <$> mapM (inferAltPat et tv) alts
+
+    pure (Case et ne (snd tv) patExpr, snd tv, concat patConstr ++ ec)
       where
-        inferAltPat :: Type -> Type -> Alt (Core a) Type -> Infer ([Constraint])
+        inferAltPat :: Type -> (Name, Type) -> Alt (Core a) (Name, Type)
+                    -> Infer (Alt (Core Type) (Name,Type), [Constraint])
         inferAltPat patBase eBase (Alt pat sc) = do
           patTV <- case pat of
-                         PLit l -> pure $ typeLit l
-                         PVar   -> fresh
+                     PLit l -> do
+                       (n, _) <- freshName
+                       return (n, typeLit l)
+                     PVar   -> freshName
           let expr = instantiate1 (V patTV) sc
 
           (ne, t,c) <- infer expr
-          pure (c ++ [(patBase, patTV), (eBase,t)])
+          let alt = Alt pat $ abstract1 patTV ne
+
+          pure (alt , (c ++ [(patBase, snd patTV), (snd eBase,t)]))
 
 
 -- | Constraint solver monad

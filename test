@@ -1,11 +1,14 @@
-let x = case 5 {
-      1 -> 2
-      5 -> 1
-      x -> x}
-    a = 5
-    sub = (x,y) -> add(x,neg(y))
-    fib = (x) -> case x {
-      0 -> 0
-      1 -> 1
-      x -> add(fib(sub(x,1)),fib(sub(x,2))) }
-in fib(12)
+// let x = case 5 {
+//      1 -> 2
+      // 5 -> 1
+      // x -> x}
+    // a = 5
+    // sub = (x,y) -> add(x,neg(y))
+    // fib = (x) -> case x {
+      // 0 -> 0
+      // 1 -> 1
+      // x -> add(fib(sub(x,1)),fib(sub(x,2))) }
+// in fib(12)
+let x = 1
+    addtwo = (x) -> add(x,3)
+in addtwo(add(x,2))

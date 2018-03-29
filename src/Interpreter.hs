@@ -1,17 +1,17 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE LambdaCase #-}
 module Interpreter where
 
-import Control.Monad.Except
-import Data.Text (Text)
-import qualified Data.Map as M
-import Bound
+import           Bound
+import           Control.Monad.Except
+import qualified Data.Map             as M
+import           Data.Text            (Text)
 
-import Core
-import Type
+import           Core
+import           Type
 
 type Run = ExceptT Err IO
-eval :: Expr' Func -> Run (Expr' Func)
+eval :: Core a Func -> Run (Core a Func)
 eval = \case
   Call t n args -> do
     let toLit (Lit l) = l
@@ -41,17 +41,17 @@ eval = \case
     eval e >>= \case
       Lit l -> case matches pat l of
                  False -> eval (Case et (Lit l) at alts)
-                 _ -> eval $ instantiate1 (Lit l) sc
+                 _     -> eval $ instantiate1 (Lit l) sc
       _ -> error "e in case not a lit"
 
 matches :: Pat -> Lit -> Bool
 matches (PLit l) lit = l == lit
-matches _ _ = True
+matches _ _          = True
 
 -- prelude
 
 prelude :: M.Map Text (Type, Func)
-prelude = M.fromList $ 
+prelude = M.fromList $
 
   [ ("add", (intf2,litf (+)))
   , ("mult", (intf2, litf (*)))
@@ -61,16 +61,16 @@ prelude = M.fromList $
     where
       litf :: (Int -> Int -> Int) -> Func
       litf f [Int a, Int b] = pure $ Int $ f a b
-      litf _ _ = error "not valid types"
+      litf _ _              = error "not valid types"
       litf1 :: (Int -> Int) -> Func
       litf1 f [Int b] = pure $ Int $ f b
-      litf1 _ _ = error "not valid types"
+      litf1 _ _       = error "not valid types"
       prInt :: Func
       prInt [Int b] = pure Unit
-      prInt _ = error "not valid types"
+      prInt _       = error "not valid types"
 
 lookup :: Text -> (Type, Func)
 lookup n = do
   case M.lookup n prelude of
-    Just e -> e
+    Just e  -> e
     Nothing -> error $ "lookup of " ++ show n ++ " failed"
