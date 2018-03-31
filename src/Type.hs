@@ -57,6 +57,8 @@ intf2 = TFunc [int, int] int
 primTypes :: M.Map Text Type
 primTypes = M.fromList
   [ f2 "add" int
+  , f2 "+" int
+  , f2 "-" int
   , f2 "sub" int
   , f2 "mul" int
   , f2 "div" int

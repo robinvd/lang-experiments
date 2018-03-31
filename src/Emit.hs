@@ -296,7 +296,9 @@ primitives = do
           ret space
 
   binf "add" i64 add
+  binf "+" i64 add
   binf "sub" i64 sub
+  binf "-" i64 sub
   binf "mul" i64 mul
   binf "div" i64 sdiv
   binf "rem" i64 urem
