@@ -18,8 +18,8 @@ import           LLVM.Module           as Mod
 import           LLVM.PassManager
 import           LLVM.Target
 import           LLVM.Transforms
+import           Text.Megaparsec       (parse, parseErrorPretty)
 import           Text.Pretty.Simple
--- import           Text.Megaparsec       (parse, parseErrorPretty')
 
 import           Core
 import           Emit
@@ -57,7 +57,9 @@ run :: String -> IO ()
 run file = do
   t <- runExceptT $ total file
   case t of
-    Left err -> print err
+    Left err -> case err of
+                  ParseError pErr -> putStr $ parseErrorPretty pErr
+                  _               -> print err
     Right _  -> putStrLn "succes"
 
 llvm :: String -> Core Scheme (Name,Scheme) -> Int -> ExceptT Err IO Int
