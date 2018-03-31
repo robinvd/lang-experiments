@@ -1,10 +1,11 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveFoldable    #-}
-{-# LANGUAGE DeriveFunctor     #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE LambdaCase        #-}
-module Typechecker where
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
+module Typechecker (runInfer, inferExpr, TypeEnv(..)) where
 
 import           Bound
 import           Control.Monad.Except
@@ -26,6 +27,9 @@ typeLit :: Lit -> Type
 typeLit = \case
   Int _ -> int
   Float _ -> float
+  Char _ -> Type "Char"
+  String _ -> error "no strings"
+  Unit -> Type "Unit"
 
 type Subst = M.Map TVar Type
 newtype TypeEnv = TypeEnv {types :: (M.Map Text Scheme)} deriving (Monoid)
@@ -45,7 +49,7 @@ runInfer env m = runExcept $ S.evalStateT (R.runReaderT m env) (Unique 0)
 inferExpr :: TypeEnv -> Core a (Name,Type) -> Either Err (Core Scheme (Name,Scheme))
 inferExpr env ex = case runInfer env (infer ex) of
   Left err -> Left err
-  Right (core, ty, cs) -> case runSolve cs of
+  Right (core, _, cs) -> case runSolve cs of
     Left err    -> Left err
     Right subst -> Right $
       bimap
@@ -67,7 +71,7 @@ class Substitutable a where
   ftv   :: a -> S.Set TVar
 
 instance Substitutable Type where
-  apply subst (Type t)    = Type t
+  apply _ (Type t)        = Type t
   apply subst (TVar v)    = M.findWithDefault (TVar v) v subst
   apply subst (TFunc a r) = TFunc (map (apply subst) a) (apply subst r)
 
@@ -146,6 +150,7 @@ tupleToInner = foldr (\(x,y) (xs,ys) -> (x:xs, y:ys)) ([],[])
 trippleToInner :: [(a,b,c)] -> ([a],[b],[c])
 trippleToInner = foldr (\(x,y,z) (xs,ys,zs) -> (x:xs, y:ys, z:zs)) ([],[],[])
 
+applyScope :: (a (Var i (a b)) -> a (Var i (a b))) -> Scope i a b -> Scope i a b
 applyScope f = Scope . f . unscope
 
 infer :: Core a (Name, Type) -> Infer (Core Type (Name, Type), Type, [Constraint])
@@ -161,7 +166,6 @@ infer = \case
     tv <- fresh
     pure (Call tv e1 e2, tv, c1 ++ c2 ++ [(t1, TFunc t2 tv)])
   Lam _ i ns sc -> do
-    tv <- fresh
     tvargs <- replicateM i freshName
     let e = instantiate (V . (tvargs !!)) sc
 

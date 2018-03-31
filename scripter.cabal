@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:
       src
-  ghc-options: -Wall
+  ghc-options: -Wall -O0 -Wno-unused-do-bind -Wno-name-shadowing
   build-depends:       base
                      , megaparsec
                      , text
@@ -53,5 +53,5 @@ executable scripter
                      , scripter
                      , optparse-applicative
   -- hs-source-dirs:      
-  ghc-options: -Wall
+  ghc-options: -Wall -O0
   default-language:    Haskell2010

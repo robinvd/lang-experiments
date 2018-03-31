@@ -56,17 +56,20 @@ commaSep = flip sepBy (symbol ",")
 
 -- parser
 
+parseLit :: Parser Lit
 parseLit =
   try (Float <$> parseFloat)
   <|> Int <$> integer
   -- <|> Char <$> charLit
 
+parseLam :: Parser Expr
 parseLam = do
   args <- parseArgs lowIdentifier
   symbol "->"
   e <- parseExpr
   return $ lam () args args e
 
+parseCase :: Parser Expr
 parseCase = do
   symbol "case"
   e <- parseExpr

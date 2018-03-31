@@ -1,36 +1,37 @@
+{-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecursiveDo #-}
-module Emit where
+module Emit (runEmit, primitives) where
 
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           LLVM.AST                   hiding (function)
-import Bound (instantiate, instantiate1, Scope)
+import Bound (instantiate, instantiate1)
 import qualified LLVM.AST                   as AST
 import LLVM.AST.Float
 import qualified LLVM.AST.CallingConvention as CC
 import           LLVM.AST.Constant as C
 import           LLVM.AST.Global as G
-import           LLVM.AST.Type
+import           LLVM.AST.Type as AST.T
 import qualified LLVM.AST.IntegerPredicate as I
 import qualified LLVM.AST.FloatingPointPredicate as F
 import           LLVM.AST.Typed
 import qualified LLVM.AST.Linkage as L
 import           LLVM.IRBuilder hiding (call)
 import qualified LLVM.AST.Attribute as A
-import LLVM.IRBuilder.Internal.SnocList
 import Control.Monad.State hiding (void)
+import GHC.Float
 import qualified Data.ByteString.Short as Short
 import Data.String
 import Data.Monoid
-import Data.Maybe
 
-import System.IO.Unsafe
-import           Text.Pretty.Simple   (pPrint)
+-- import System.IO.Unsafe
+-- import           Text.Pretty.Simple   (pPrint)
 
--- import           Codegen
 import qualified Core                       as Core
 import qualified Type as T
 
@@ -109,7 +110,7 @@ newtype Supply = Supply Word
 runEmit :: Core.Core T.Scheme (T.Name, T.Scheme) -> Int -> AST.Module
 runEmit core count = flip evalState (Supply 10) $ do
   -- buildModuleT "main" $ do
-  defs <-execModuleBuilderT emptyModuleBuilder $ do
+  defs <- execModuleBuilderT emptyModuleBuilder $ do
     setup
     let newCore = (\(n, s) -> (pure . ConstantOperand . GlobalReference (ptr $ typeOf s) . mkName . T.unpack . T.nameOrig $ n)) <$> core
 
@@ -121,12 +122,15 @@ runEmit core count = flip evalState (Supply 10) $ do
 
 convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m) 
            => Core.Lit -> m Operand
-convertLit = \case
+convertLit l = case l of
   Core.Int i -> do
     space <- malloc -- alloca i64 Nothing 0
     store space 0 (ConstantOperand $ Int 64 $ toInteger i)
     return space
-  -- Core.Float f -> return $ Float $ Double f
+  Core.Float f -> do
+    space <- malloc
+    store space 0 (ConstantOperand $ Float $ Double $ float2Double f)
+    return space
   -- Core.Char c -> $ Int 8 $ toInteger $ fromEnum c
   _ -> error "not done yet"
 
@@ -140,6 +144,7 @@ cmpLit a b = do
       icmp I.EQ x y
     FloatingPointType _ -> do
       fcmp F.OEQ x y
+    _ -> error "type not supported in cmpLit"
   where
     getLit opr =
       case typeOf opr of
@@ -147,11 +152,12 @@ cmpLit a b = do
           load opr 0 >>= getLit
         IntegerType _ -> pure opr
         FloatingPointType _ -> pure opr
+        _ -> error "not a lit in cmpLit"
 
 convert :: ( MonadFix m, MonadState Supply m, MonadModuleBuilder m)
            -- , MonadIRBuilder f)
         => Core.Core T.Scheme (IRBuilderT m Operand) -> IRBuilderT m Operand
-convert = \case 
+convert c = case c of
   Core.Call t n args -> do
     irn <- convert n
     irs <- mapM convert args
@@ -185,7 +191,7 @@ convert = \case
     lift $ functionWithAttr
       n
       []
-      [(typeOf x, NoParameterName) | x <- argT]
+      [(typeOf x, ParameterName (toShort n)) | (x,n) <- zip argT ns]
       (typeOf retT)
       (\args -> convert (instantiate (\x -> Core.V . pure $ args !! x) sc) >>= ret)
 
@@ -198,7 +204,7 @@ convertAlt :: (MonadFix m, MonadState Supply m, MonadModuleBuilder m)
            -> Operand 
            -> [Core.Alt (Core.Core T.Scheme) (IRBuilderT m Operand)]
            -> IRBuilderT m [(Operand, Name)]
-convertAlt final _ [] = do
+convertAlt _ _ [] = do
   str <- mkString "case not complete"
   puts str
   exit
@@ -269,41 +275,41 @@ malloc = do
   space <- callWith CC.C (ConstantOperand $ GlobalReference ft "malloc") [(size,[])]
   bitcast space (ptr i64)
 
-mkPrelude :: (MonadState Supply m, MonadModuleBuilder m) => m ()
-mkPrelude = do
+primitives :: (MonadState Supply m, MonadModuleBuilder m) => m ()
+primitives = do
   extern "puts" [ptr i8] void
   extern "malloc" [i64] (ptr i8)
   extern "exit" [] void
   extern "fflush" [ptr i8] void
-  functionWithAttr
-    "add" 
-    [Right A.AlwaysInline]
-    [(ptr i64, NoParameterName), (ptr i64, NoParameterName)] 
-    (ptr i64) 
-    $ \[a,b] -> do
-      x <- load a 0
-      y <- load b 0
-      sum <- add x y
-      space <- malloc
-      store space 0 sum
-      ret space
-  functionWithAttr
-    "sub" 
-    [Right A.AlwaysInline]
-    [(ptr i64, NoParameterName), (ptr i64, NoParameterName)] 
-    (ptr i64) 
-    $ \[a,b] -> do
-      x <- load a 0
-      y <- load b 0
-      sum <- sub x y
-      space <- malloc
-      store space 0 sum
-      ret space
+  -- extern "sqrt" [float] float
+  let binf name ty opr = functionWithAttr
+        name
+        [Right A.AlwaysInline]
+        [(ptr ty, NoParameterName), (ptr ty, NoParameterName)] 
+        (ptr ty) 
+        $ \[a,b] -> do
+          x <- load a 0
+          y <- load b 0
+          new <- opr x y
+          space <- malloc
+          store space 0 new
+          ret space
+
+  binf "add" i64 add
+  binf "sub" i64 sub
+  binf "mul" i64 mul
+  binf "div" i64 sdiv
+  binf "rem" i64 urem
+  binf "fadd" AST.T.double fadd
+  binf "fsub" AST.T.double fsub
+  binf "fmul" AST.T.double fmul
+  binf "fdiv" AST.T.double fdiv
+  binf "frem" AST.T.double frem
   return ()
 
 setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 setup = do
-  mkPrelude
+  primitives
   function "main" [] (i64) buildMain
   return ()
 
@@ -317,7 +323,6 @@ buildMain _ = do
       fflush = toF "fflush" void [ptr i8]
       null = (ConstantOperand $ C.IntToPtr (Int 8 0) (ptr i8), [])
 
-  -- emitInstrVoid $ Call Nothing CC.C [] puts [(str, [])] [] []
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []
   emitInstrVoid $ Call Nothing CC.C [] fflush [null] [] []
   ret =<< load r 0

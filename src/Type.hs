@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Type where
 
+import qualified Data.Map        as M
 import           Data.Text       (Text)
 import           Data.Void
 import qualified LLVM.AST.Type   as T
@@ -52,3 +53,22 @@ float = Type "Float"
 unit = Type "Unit"
 intf1 = TFunc [int] int
 intf2 = TFunc [int, int] int
+
+primTypes :: M.Map Text Type
+primTypes = M.fromList
+  [ f2 "add" int
+  , f2 "sub" int
+  , f2 "mul" int
+  , f2 "div" int
+  , f2 "rem" int
+  , f2 "fadd" float
+  , f2 "fsub" float
+  , f2 "fmul" float
+  , f2 "fdiv" float
+  , f2 "frem" float
+  ]
+    where
+      f2 n t = (n,TFunc [t,t] t)
+
+lookupPrim :: Text -> Type
+lookupPrim x = M.findWithDefault (error "no prim") x primTypes
