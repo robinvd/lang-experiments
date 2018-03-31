@@ -55,8 +55,8 @@ data Core t a
   = Call t (Core t a) [Core t a]
   | Lit Lit
   | V a
-  | Let t Int [t] [Scope Int (Core t) a] (Scope Int (Core t) a)
-  | Lam t Int (Scope Int (Core t) a)
+  | Let t Int [t] [Text] [Scope Int (Core t) a] (Scope Int (Core t) a)
+  | Lam t Int [Text] (Scope Int (Core t) a)
   | Case t (Core t a) t [Alt (Core t) a]
   deriving (Traversable, Functor, Foldable)
 
@@ -67,10 +67,10 @@ instance Bifunctor Core where
     Call t a b -> Call (f t) (first f a) (map (first f) b)
     Lit l -> Lit l
     V a -> V a
-    Let t i ts sc se ->
-      Let (f t) i (map f ts) (map process sc) (process se)
-    Lam t i sc ->
-      Lam (f t) i $ process sc
+    Let t i ts ns sc se ->
+      Let (f t) i (map f ts) ns (map process sc) (process se)
+    Lam t i ns sc ->
+      Lam (f t) i ns $ process sc
     Case t e armT arms ->
       Case (f t) (first f e) (f armT) (map (altModScope process) arms)
     where
@@ -86,8 +86,8 @@ instance Monad (Core t) where
   Call t x y >>= f = Call t (x >>= f) (map (>>= f) y)
   Lit l >>= _ = Lit l
   V a >>= f = f a
-  Let t i ts ls e >>= f = Let t i ts (map (>>>= f) ls) (e >>>= f)
-  Lam t i e >>= f = Lam t i (e >>>= f)
+  Let t i ns ts ls e >>= f = Let t i ns ts (map (>>>= f) ls) (e >>>= f)
+  Lam t i ns e >>= f = Lam t i ns (e >>>= f)
   Case t e at alts >>= f = Case t (e >>= f) at (map (>>>= f) alts)
 
 
@@ -104,14 +104,14 @@ instance (Ord t,Ord a) => Ord (Core t a) where compare = compare1
 instance (Show t,Show a) => Show (Core t a) where showsPrec = showsPrec1
 
 
-let_ :: Eq a => t -> [t] -> [(a,Core t a)] -> Core t a -> Core t a
-let_ _ _ [] b = b
-let_ t ts bs b = Let t (length bs) ts (map (abstr . snd) bs) (abstr b)
+let_ :: Eq a => t -> [t] -> [Text] -> [(a,Core t a)] -> Core t a -> Core t a
+let_ _ _ _ [] b = b
+let_ t ts ns bs b = Let t (length bs) ts ns (map (abstr . snd) bs) (abstr b)
   where abstr = abstract (`elemIndex` map fst bs)
 
-lam :: Eq a => t -> [a] -> Core t a -> Core t a
-lam _ [] b = b
-lam t bs b = Lam t (length bs) (abstr b)
+lam :: Eq a => t -> [Text] -> [a] -> Core t a -> Core t a
+lam _ _ [] b = b
+lam t ns bs b = Lam t (length bs) ns (abstr b)
   where abstr = abstract (`elemIndex` bs)
 
 alt :: Eq a => Either a Lit -> Expr' a -> Alt Expr' a

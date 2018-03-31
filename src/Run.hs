@@ -8,6 +8,7 @@ import           Prelude              hiding (lookup)
 import           Bound
 import           Control.Monad.Except
 import qualified Data.ByteString      as B
+import           Data.String          (fromString)
 import qualified Data.Text            as T
 import qualified Data.Text.IO         as T
 import           Text.Megaparsec      (parse, parseErrorPretty')
@@ -37,6 +38,7 @@ import           LLVM.PassManager
 import           LLVM.Transforms
 
 import qualified LLVM.ExecutionEngine as EE
+import           Text.Pretty.Simple   (pPrint)
 
 import           LLVM.Module
 
@@ -54,12 +56,12 @@ total fileName = do
       preludeTyped :: Core () (Name, Type)
       preludeTyped = (\x -> (x, fst $ lookup $ nameOrig x)) <$> renamed
   t <- liftEither $ inferExpr mempty preludeTyped
-  liftIO $ print t
+  liftIO $ pPrint t
   liftIO $ putStrLn "---"
-  e <- eval (snd . lookup . nameOrig . fst <$> t)
-  eres <- liftMaybe $ closed e
-  liftIO $ print (eres :: Core Scheme T.Text)
-  llvmres <- llvm t count
+  -- e <- eval (snd . lookup . nameOrig . fst <$> t)
+  -- eres <- liftMaybe $ closed e
+  -- liftIO $ print (eres :: Core Scheme T.Text)
+  llvmres <- llvm fileName t count
   liftIO $ print llvmres
 
 
@@ -71,17 +73,21 @@ run file = do
     Left err -> print err
     Right _  -> putStrLn "succes"
 
-llvm :: Core Scheme (Name,Scheme) -> Int -> ExceptT Err IO Int
-llvm core count = do
-  let ast = runEmit core count
+llvm :: String -> Core Scheme (Name,Scheme) -> Int -> ExceptT Err IO Int
+llvm fileName core count = do
+  let ast = (runEmit core count)
+        {AST.moduleSourceFileName = fromString fileName}
+  liftIO $ pPrint ast
   e <- liftIO $ do
     putStrLn "start llvm"
     ret <- withContext $ \c -> jit c $ \mcjit ->
       withModuleFromAST c ast $ \bc -> do
-        withPassManager passes $ \pm -> do
+        pass <- passes
+        withPassManager pass $ \pm -> do
           runPassManager pm bc
           writeLLVMAssemblyToFile (File "out") bc
           moduleLLVMAssembly bc >>= liftIO . B.putStrLn
+          putStrLn "start JIT"
           EE.withModuleInEngine mcjit bc $ \em -> do
             mf <- EE.getFunction em (AST.mkName "main")
             case mf of
@@ -99,16 +105,57 @@ jit c = EE.withMCJIT c optlevel model ptrelim fastins
     ptrelim  = Nothing -- frame pointer elimination
     fastins  = Nothing -- fast instruction selection
 
-passes :: PassSetSpec
-passes = defaultPassSetSpec
-  { transforms = []
-    -- [ AlwaysInline False
-    -- , FunctionAttributes
-    -- , FunctionInlining 5
-    -- , PromoteMemoryToRegister
-    -- , Reassociate
-    -- , TailCallElimination
-    -- , Sinking
-    -- , InstructionCombining
-    -- ]
-  }
+passes :: IO PassSetSpec
+passes = do
+  withHostTargetMachine $ \t ->
+    return defaultPassSetSpec
+      { targetMachine = Nothing
+      , transforms = allPasses
+      }
+
+noPasses,allPasses,testPasses :: [Pass]
+noPasses = []
+allPasses =
+  [ AlwaysInline True
+  , InternalizeFunctions ["main"]
+  , FunctionAttributes
+  , PartialInlining
+  , FunctionInlining 1
+  , PromoteMemoryToRegister
+  -- , Reassociate
+  , TailCallElimination
+  , Sinking
+  , ArgumentPromotion
+
+  , InstructionCombining
+  , GlobalValueNumbering True
+
+  , DeadCodeElimination
+
+  , DeadInstructionElimination
+  , DeadStoreElimination
+  --
+  , GlobalDeadCodeElimination
+  ]
+testPasses =
+  [ AlwaysInline True
+  , InternalizeFunctions ["main"]
+  , FunctionAttributes
+  -- , PartialInlining
+  -- , FunctionInlining 1
+  -- , PromoteMemoryToRegister
+  -- , Reassociate
+  , TailCallElimination
+  -- , Sinking
+  -- , ArgumentPromotion
+
+  -- , InstructionCombining
+  -- , GlobalValueNumbering True
+
+  -- , DeadCodeElimination
+
+  -- , DeadInstructionElimination
+  -- , DeadStoreElimination
+  --
+  -- , GlobalDeadCodeElimination
+  ]

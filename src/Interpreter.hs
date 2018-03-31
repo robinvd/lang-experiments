@@ -27,10 +27,10 @@ eval = \case
 
   Lit x -> pure $ Lit x
   V x -> pure $ V x
-  Let _ i _ bs b -> eval (inst b)
+  Let _ i _ ns bs b -> eval (inst b)
     where es = map inst bs
           inst = instantiate (es !!)
-  Lam _ _ l -> pure $ V $ (\args ->
+  Lam _ _ ns l -> pure $ V $ (\args ->
     let eArgs = map Lit args
         inst = instantiate (eArgs !!)
         newE = inst l

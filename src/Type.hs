@@ -23,7 +23,7 @@ data Err
 data Name = Name
   { nameId   :: Int
   , nameOrig :: Text
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Ord)
 
 newtype TVar = TV Text
   deriving (Show, Eq, Ord)

@@ -160,7 +160,7 @@ infer = \case
         c2 = concatMap (\(_,_,a) -> a) x
     tv <- fresh
     pure (Call tv e1 e2, tv, c1 ++ c2 ++ [(t1, TFunc t2 tv)])
-  Lam _ i sc -> do
+  Lam _ i ns sc -> do
     tv <- fresh
     tvargs <- replicateM i freshName
     let e = instantiate (V . (tvargs !!)) sc
@@ -168,8 +168,8 @@ infer = \case
     (e, t, c) <- infer e
     let thisT = TFunc (map snd tvargs) t
 
-    return (lam thisT tvargs e, thisT, c)
-  Let _ i _ letsSc sc -> do
+    return (lam thisT ns tvargs e, thisT, c)
+  Let _ i _ ns letsSc sc -> do
     tvis <- replicateM i freshName
     let lets = map (instantiate (V . (tvis !!))) letsSc
         expr = instantiate (V . (tvis !!)) sc
@@ -177,7 +177,7 @@ infer = \case
     (c, tls, lcs) <- trippleToInner <$> mapM infer lets
     (ce, te, tc) <- infer expr
 
-    let newExpr = let_ te tls (zip tvis c) ce
+    let newExpr = let_ te tls ns (zip tvis c) ce
     pure (newExpr ,te, concat lcs ++ tc)
   Case _ e _ alts -> do
     tv <- freshName

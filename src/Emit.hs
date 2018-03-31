@@ -17,14 +17,55 @@ import           LLVM.AST.Type
 import qualified LLVM.AST.IntegerPredicate as I
 import qualified LLVM.AST.FloatingPointPredicate as F
 import           LLVM.AST.Typed
-import           LLVM.IRBuilder
+import qualified LLVM.AST.Linkage as L
+import           LLVM.IRBuilder hiding (call)
 import qualified LLVM.AST.Attribute as A
 import LLVM.IRBuilder.Internal.SnocList
 import Control.Monad.State hiding (void)
+import qualified Data.ByteString.Short as Short
+import Data.String
+import Data.Monoid
+import Data.Maybe
+
+import System.IO.Unsafe
+import           Text.Pretty.Simple   (pPrint)
 
 -- import           Codegen
 import qualified Core                       as Core
 import qualified Type as T
+
+toShort :: T.Text -> Short.ShortByteString
+toShort = fromString . T.unpack
+
+
+call :: MonadIRBuilder m 
+     => Operand 
+     -> [(Operand, [A.ParameterAttribute])] 
+     -> m Operand
+call = callWith CC.Fast
+callWith :: MonadIRBuilder m 
+     => CC.CallingConvention
+     -> Operand 
+     -> [(Operand, [A.ParameterAttribute])] 
+     -> m Operand
+callWith cc fun args = do
+  let instr = Call {
+    AST.tailCallKind = Nothing
+  , AST.callingConvention = cc
+  , AST.returnAttributes = []
+  , AST.function = Right fun
+  , AST.arguments = args
+  , AST.functionAttributes = []
+  , AST.metadata = []
+  }
+  case typeOf fun of
+      FunctionType r _ _ -> case r of
+        VoidType -> emitInstrVoid instr >> (pure (ConstantOperand (C.Undef void)))
+        _        -> emitInstr r instr
+      PointerType (FunctionType r _ _) _ -> case r of
+        VoidType -> emitInstrVoid instr >> (pure (ConstantOperand (C.Undef void)))
+        _        -> emitInstr r instr
+      _ -> error "Cannot call non-function (Malformed AST)."
 
 -- | Define and emit a (non-variadic) function definition
 functionWithAttr
@@ -46,6 +87,8 @@ functionWithAttr label attr argtys retty body = do
   let
     def = GlobalDefinition functionDefaults
       { name        = label
+      , G.callingConvention = CC.Fast
+      , linkage     = L.Private
       , parameters  = (zipWith (\ty nm -> Parameter ty nm []) tys paramNames, False)
       , returnType  = retty
       , basicBlocks = blocks
@@ -64,11 +107,17 @@ instance MonadModuleBuilder m => MonadModuleBuilder (IRBuilderT m) where
 newtype Supply = Supply Word
 
 runEmit :: Core.Core T.Scheme (T.Name, T.Scheme) -> Int -> AST.Module
-runEmit core count = flip evalState (Supply 0) $ buildModuleT "main" $ do
+runEmit core count = flip evalState (Supply 10) $ do
+  -- buildModuleT "main" $ do
+  defs <-execModuleBuilderT emptyModuleBuilder $ do
     setup
     let newCore = (\(n, s) -> (pure . ConstantOperand . GlobalReference (ptr $ typeOf s) . mkName . T.unpack . T.nameOrig $ n)) <$> core
 
-    function "userMain" [] (ptr i64) $ \_ -> convert newCore >>= ret
+    functionWithAttr "userMain" [] [] (ptr i64) $ \_ -> convert newCore >>= ret
+  return defaultModule
+    { moduleDefinitions = defs
+    , moduleName = "main"
+    }
 
 convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m) 
            => Core.Lit -> m Operand
@@ -109,21 +158,20 @@ convert = \case
     call irn [(a,[]) | a <- irs]
   Core.Lit l -> convertLit l
   Core.V n -> n
-  Core.Let t i ts sc se -> do
-    -- todo mutual dependence in fns
-    let f (n,t) = Core.V $ undefined
-        argsE = map 
-          (instantiate (map f (undefined) !!))
-          sc
-        init :: Monad m 
-             => [Scope Int (Core.Core T.Scheme) (IRBuilderT m Operand)]
-             -> [Operand] -> [Core.Core T.Scheme (IRBuilderT m Operand)]
-        init scope elem = 
-          map (instantiate (\i -> Core.V $ pure (elem !! i))) scope
+  Core.Let t i ts ns sc se -> do
+    -- let init :: Monad m 
+    --          => [Operand]
+    --          -> [Core.Core T.Scheme (IRBuilderT m Operand)]
+    let init elem = 
+          map (instantiate (pure . pure . (elem !! ))) sc
 
-    rec res <- forM (init sc res) $ \(core) -> convert core
+    rec res <- forM (zip (init res) ns) $ \(c,n) -> convert c `named` (toShort n)
       
-    convert $ instantiate (pure . pure . (res !!)) se
+    convert $ 
+      -- unsafePerformIO (pPrint res) 
+      -- `seq` unsafePerformIO (print $ res !! 0 == res !! 1)
+      -- `seq` 
+      instantiate (pure . pure . (res !!)) se
   Core.Case t predCore armT arms -> do
     pred <- convert predCore
     finalizer <- fresh
@@ -131,8 +179,9 @@ convert = \case
     emitBlockStart finalizer
     phi ends
 
-  Core.Lam (T.Forall _ (T.TFunc argT retT)) i sc -> do
-    n <- freshGlobal
+  Core.Lam (T.Forall _ (T.TFunc argT retT)) i ns sc -> do
+    currName <- liftIRState $ gets builderNameSuggestion
+    n <- maybe freshGlobal freshGlobalName currName
     lift $ functionWithAttr
       n
       []
@@ -140,7 +189,7 @@ convert = \case
       (typeOf retT)
       (\args -> convert (instantiate (\x -> Core.V . pure $ args !! x) sc) >>= ret)
 
-  _ -> pure $ ConstantOperand $ Int 64 2
+  -- _ -> pure $ ConstantOperand $ Int 64 2
 
 -- | create a test and br
 --   make a new block
@@ -183,7 +232,14 @@ convertAlt final pred (a:as) = do
 freshGlobal :: MonadState Supply m => m Name
 freshGlobal = do
   Supply n <- get
+  put $ Supply (n+1)
   return $ UnName n
+
+freshGlobalName :: MonadState Supply m => Short.ShortByteString -> m Name
+freshGlobalName addition = do
+  Supply n <- get
+  put $ Supply (n+1)
+  return $ Name $ addition <> fromString (show n)
 
 mkString :: (MonadState Supply m, MonadModuleBuilder m) => String -> m (Operand)
 mkString str = do
@@ -199,18 +255,18 @@ mkString str = do
 
 puts :: MonadIRBuilder m => Operand -> m Operand
 puts str = do
-  call (ConstantOperand $ GlobalReference (FunctionType VoidType [ptr i8] False) "puts")
+  callWith CC.C (ConstantOperand $ GlobalReference (FunctionType VoidType [ptr i8] False) "puts")
     [(str, [])]
 
 exit :: MonadIRBuilder m => m Operand
-exit = call (ConstantOperand $ GlobalReference (FunctionType VoidType [] False) "exit") []
+exit = callWith CC.C (ConstantOperand $ GlobalReference (FunctionType VoidType [] False) "exit") []
 
 malloc :: MonadIRBuilder m => m Operand
 malloc = do
   let ft = ptr $ FunctionType (ptr i8) [i64] False
       size = ConstantOperand $ Int 64 4
       
-  space <- call (ConstantOperand $ GlobalReference ft "malloc") [(size,[])]
+  space <- callWith CC.C (ConstantOperand $ GlobalReference ft "malloc") [(size,[])]
   bitcast space (ptr i64)
 
 mkPrelude :: (MonadState Supply m, MonadModuleBuilder m) => m ()

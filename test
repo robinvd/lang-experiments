@@ -1,6 +1,11 @@
 let
-  fib = (x) -> case x {
-    0 -> 0
-    1 -> 1
-    x -> add(fib(sub(x,1)),fib(sub(x,2))) }
-in fib(12)
+  isOdd = (x) -> case x {
+    0 -> 0  
+    x -> isEven(sub(x,1))
+  }
+  isEven = (x) -> case x {
+    0 -> 1
+    x -> isOdd(sub(x,1))
+  }
+  f = (x) -> 50
+in isEven(20)
