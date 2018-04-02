@@ -33,11 +33,11 @@ let
 
   jobs = pkgs.lib.attrsets.mapAttrs (name: value: pkgs.haskell.lib.dontHaddock (pkgs.haskell.lib.dontCheck value)) {
     llvm-hs-pretty = myCall s {};
-    llvm-hs = myCall ./llvm-hs.nix {};
-    llvm-hs-pure = myCall ./llvm-hs-pure.nix {};
-    megaparsec = myCall ./megaparsec.nix {};
+    llvm-hs = myCall ./nix/llvm-hs.nix {};
+    llvm-hs-pure = myCall ./nix/llvm-hs-pure.nix {};
+    megaparsec = myCall ./nix/megaparsec.nix {};
 
   };
-  rlang = myCall ./app.nix {};
+  rlang = myCall ./nix/app.nix {};
 in
 if pkgs.lib.inNixShell then rlang.env else rlang
