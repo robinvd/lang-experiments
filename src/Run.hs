@@ -3,22 +3,24 @@
 {-# LANGUAGE OverloadedStrings        #-}
 module Run where
 
-import           Prelude               hiding (lookup)
+import           Prelude                       hiding (lookup)
 
 import           Control.Monad.Except
-import qualified Data.ByteString.Char8 as B8
-import           Data.String           (fromString)
-import qualified Data.Text.IO          as T
-import qualified Data.Text.Lazy.IO     as TL
-import           Foreign.Ptr           (FunPtr, castFunPtr)
-import qualified LLVM.AST              as AST
+import qualified Data.ByteString.Char8         as B8
+import           Data.String                   (fromString)
+import qualified Data.Text.IO                  as T
+import qualified Data.Text.Lazy.IO             as TL
+import           Foreign.Ptr                   (FunPtr, castFunPtr)
+import qualified LLVM.AST                      as AST
 import           LLVM.Context
-import qualified LLVM.ExecutionEngine  as EE
-import           LLVM.Module           as Mod
+import qualified LLVM.ExecutionEngine          as EE
+import           LLVM.Module                   as Mod
 import           LLVM.PassManager
 import           LLVM.Target
 import           LLVM.Transforms
-import           Text.Megaparsec       (parse, parseErrorPretty)
+import           System.Exit
+import           System.Process
+import           Text.Megaparsec               (parse, parseErrorPretty)
 import           Text.Pretty.Simple
 
 import           Core
@@ -29,6 +31,7 @@ import           Rename
 import           Type
 import           Typechecker
 
+import qualified LLVM.Internal.FFI.PassManager as F
 
 foreign import ccall "dynamic" haskFun :: FunPtr (IO Int) -> (IO Int)
 
@@ -68,24 +71,31 @@ llvm fileName core baseCount = do
       ast = (runEmit core baseCount)
         {AST.moduleSourceFileName = fromString fileName}
   liftIO $ TL.writeFile (baseFile ++ ".ast") $ pShowNoColor ast
-  e <- liftIO $ do
-    putStrLn "start llvm"
-    ret <- withContext $ \c -> jit c $ \mcjit ->
-      withModuleFromAST c ast $ \bc -> do
-        pass <- passes
-        withPassManager pass $ \pm -> do
-          -- runPassManager pm bc
-          writeLLVMAssemblyToFile (File (baseFile ++ ".ll")) bc
-          -- moduleLLVMAssembly bc >>= liftIO . B8.putStrLn
-          putStrLn "start JIT"
-          EE.withModuleInEngine mcjit bc $ \em -> do
-            mf <- EE.getFunction em (AST.mkName "main")
-            case mf of
-              Just f  -> Right <$> haskFun (castFunPtr f :: FunPtr (IO Int))
-              Nothing -> pure $ Left $ RunError "no main"
-    putStrLn "done"
-    return ret
-  liftEither e
+  liftIO $ putStrLn "start llvm"
+  liftIO $
+    withContext $ \c ->
+    withHostTargetMachine $ \tm ->
+    withModuleFromAST c ast $ \bc ->
+    withPassManager (passes $ Just tm) $ \pm -> do
+      F.addGlobalDeadCodeEliminationPass' pm
+      runPassManager pm bc
+      writeLLVMAssemblyToFile (File (baseFile ++ ".ll")) bc
+      -- moduleLLVMAssembly bc >>= liftIO . B8.putStrLn
+      writeTargetAssemblyToFile tm (File (baseFile ++ ".s")) bc
+      writeObjectToFile tm (File (baseFile ++ ".so")) bc
+  res <- liftIO $ do
+    let files =
+          [ baseFile ++ ".so"
+          , "lib/gc.c"
+          ]
+    callCommand $ "clang " ++ unwords files ++ " -o " ++ baseFile
+    (exitc, stdout, stderr) <-
+      readCreateProcessWithExitCode (proc baseFile []) ""
+    putStrLn stdout
+    return $ case exitc of
+                 ExitSuccess   -> 0
+                 ExitFailure i -> i
+  return res
 
 jit :: Context -> (EE.MCJIT -> IO a) -> IO a
 jit c = EE.withMCJIT c optlevel model ptrelim fastins
@@ -95,13 +105,12 @@ jit c = EE.withMCJIT c optlevel model ptrelim fastins
     ptrelim  = Nothing -- frame pointer elimination
     fastins  = Nothing -- fast instruction selection
 
-passes :: IO PassSetSpec
-passes = do
-  withHostTargetMachine $ \_ ->
-    return defaultPassSetSpec
-      { targetMachine = Nothing
-      , transforms = noPasses
-      }
+passes :: Maybe TargetMachine -> PassSetSpec
+passes tm =
+  defaultPassSetSpec
+    { targetMachine = tm
+    , transforms = noPasses
+    }
 
 noPasses,allPasses,testPasses :: [Pass]
 noPasses = []
@@ -136,16 +145,18 @@ testPasses =
   -- , PromoteMemoryToRegister
   -- , Reassociate
   , TailCallElimination
+  -- , SimplifyLibCalls
   -- , Sinking
   -- , ArgumentPromotion
 
-  -- , InstructionCombining
-  -- , GlobalValueNumbering True
+  , InstructionCombining
+  , GlobalValueNumbering True
+  , SimplifyControlFlowGraph
 
   -- , DeadCodeElimination
 
   -- , DeadInstructionElimination
   -- , DeadStoreElimination
   --
-  -- , GlobalDeadCodeElimination
+  , GlobalDeadCodeElimination
   ]

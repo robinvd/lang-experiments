@@ -21,7 +21,7 @@ import qualified LLVM.AST.IntegerPredicate as I
 import qualified LLVM.AST.FloatingPointPredicate as F
 import           LLVM.AST.Typed
 import qualified LLVM.AST.Linkage as L
-import           LLVM.IRBuilder hiding (call)
+import           LLVM.IRBuilder hiding (call, double)
 import qualified LLVM.AST.Attribute as A
 import Control.Monad.State hiding (void)
 import GHC.Float
@@ -89,11 +89,12 @@ functionWithAttr label attr argtys retty body = do
     def = GlobalDefinition functionDefaults
       { name        = label
       , G.callingConvention = CC.Fast
-      , linkage     = L.Private
+      -- , linkage     = L.Private
       , parameters  = (zipWith (\ty nm -> Parameter ty nm []) tys paramNames, False)
       , returnType  = retty
       , basicBlocks = blocks
       , G.functionAttributes = attr
+      , garbageCollectorName = Just "statepoint-example"
       }
     funty = ptr $ FunctionType retty (fst <$> argtys) False
   emitDefn def
@@ -124,11 +125,11 @@ convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m)
            => Core.Lit -> m Operand
 convertLit l = case l of
   Core.Int i -> do
-    space <- malloc -- alloca i64 Nothing 0
+    space <- malloc i64 -- alloca i64 Nothing 0
     store space 0 (ConstantOperand $ Int 64 $ toInteger i)
     return space
   Core.Float f -> do
-    space <- malloc
+    space <- malloc double
     store space 0 (ConstantOperand $ Float $ Double $ float2Double f)
     return space
   -- Core.Char c -> $ Int 8 $ toInteger $ fromEnum c
@@ -261,24 +262,25 @@ mkString str = do
 
 puts :: MonadIRBuilder m => Operand -> m Operand
 puts str = do
-  callWith CC.C (ConstantOperand $ GlobalReference (FunctionType VoidType [ptr i8] False) "puts")
+  callWith CC.C (ConstantOperand $ GlobalReference (ptr $ FunctionType VoidType [ptr i8] False) "puts")
     [(str, [])]
 
 exit :: MonadIRBuilder m => m Operand
 exit = callWith CC.C (ConstantOperand $ GlobalReference (FunctionType VoidType [] False) "exit") []
 
-malloc :: MonadIRBuilder m => m Operand
-malloc = do
+malloc :: MonadIRBuilder m => Type -> m Operand
+malloc t = do
   let ft = ptr $ FunctionType (ptr i8) [i64] False
       size = ConstantOperand $ Int 64 4
       
-  space <- callWith CC.C (ConstantOperand $ GlobalReference ft "malloc") [(size,[])]
-  bitcast space (ptr i64)
+  space <- callWith CC.C (ConstantOperand $ GlobalReference ft "alloc") [(size,[])]
+  bitcast space (ptr t)
 
 primitives :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 primitives = do
   extern "puts" [ptr i8] void
-  extern "malloc" [i64] (ptr i8)
+  extern "alloc" [i64] (ptr i8)
+  extern "initGC" [] void
   extern "exit" [] void
   extern "fflush" [ptr i8] void
   -- extern "sqrt" [float] float
@@ -291,7 +293,7 @@ primitives = do
           x <- load a 0
           y <- load b 0
           new <- opr x y
-          space <- malloc
+          space <- malloc ty
           store space 0 new
           ret space
 
@@ -311,7 +313,12 @@ primitives = do
 
 setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 setup = do
+  str <- mkString "runPoll"
   primitives
+  function "gc.safepoint_poll" [] void $ \_ -> do
+    puts str
+    retVoid
+    
   function "main" [] (i64) buildMain
   return ()
 
@@ -325,6 +332,7 @@ buildMain _ = do
       fflush = toF "fflush" void [ptr i8]
       null = (ConstantOperand $ C.IntToPtr (Int 8 0) (ptr i8), [])
 
+  r <- call (ConstantOperand $ GlobalReference (toT void []) "initGC") []
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []
   emitInstrVoid $ Call Nothing CC.C [] fflush [null] [] []
   ret =<< load r 0

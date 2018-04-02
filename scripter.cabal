@@ -30,6 +30,7 @@ library
                      , llvm-hs-pure
                      , bytestring
                      , pretty-simple
+                     , process
   exposed-modules:
     Codegen
     Core
