@@ -16,6 +16,7 @@ import           LLVM.Context
 import qualified LLVM.ExecutionEngine          as EE
 import           LLVM.Module                   as Mod
 import           LLVM.PassManager
+import           LLVM.Pretty                   (ppllvm)
 import           LLVM.Target
 import           LLVM.Transforms
 import           System.Exit
@@ -71,24 +72,49 @@ llvm fileName core baseCount = do
       ast = (runEmit core baseCount)
         {AST.moduleSourceFileName = fromString fileName}
   liftIO $ TL.writeFile (baseFile ++ ".ast") $ pShowNoColor ast
-  liftIO $ putStrLn "start llvm"
-  liftIO $
-    withContext $ \c ->
-    withHostTargetMachine $ \tm ->
-    withModuleFromAST c ast $ \bc ->
-    withPassManager (passes $ Just tm) $ \pm -> do
-      F.addGlobalDeadCodeEliminationPass' pm
-      runPassManager pm bc
-      writeLLVMAssemblyToFile (File (baseFile ++ ".ll")) bc
-      -- moduleLLVMAssembly bc >>= liftIO . B8.putStrLn
-      writeTargetAssemblyToFile tm (File (baseFile ++ ".s")) bc
-      writeObjectToFile tm (File (baseFile ++ ".so")) bc
-  res <- liftIO $ do
-    let files =
-          [ baseFile ++ ".so"
-          , "lib/gc.c"
+
+  liftIO $ do
+    let llFile = baseFile ++ ".ll"
+        passes =
+          -- [ "-internalize"
+          [ "-simplifycfg"
+          , "-globaldce"
+          , "-always-inline"
+          , "-functionattrs"
+          , "-tailcallelim"
+          , "-strip-dead-debug-info"
+          , "-place-backedge-safepoints-impl"
+          , "-rewrite-statepoints-for-gc"
           ]
-    callCommand $ "clang " ++ unwords files ++ " -o " ++ baseFile
+        outArg = ["-o", baseFile ++ ".bc"]
+        includes =
+          [ "lib/gc.c"
+          , "lib/llvm-statepoint-utils/dist/llvm-statepoint-tablegen.a"
+          , "lib/shim.s"
+          ]
+        clangOutArg = ["-o", baseFile]
+    TL.writeFile llFile $ ppllvm ast
+    waitForProcess =<<
+      spawnProcess "opt" (passes ++ [llFile] ++ outArg)
+    waitForProcess =<<
+      spawnProcess "llc" [baseFile ++ ".bc"]
+    T.appendFile (baseFile ++ ".s") ".globl __LLVM_StackMaps"
+    waitForProcess =<<
+      spawnProcess "clang" ([baseFile ++ ".s"] ++ includes ++ clangOutArg)
+
+  -- liftIO $ putStrLn "start llvm"
+  -- liftIO $
+  --   withContext $ \c ->
+  --   withHostTargetMachine $ \tm ->
+  --   withModuleFromAST c ast $ \bc ->
+  --   withPassManager (passes $ Just tm) $ \pm -> do
+  --     F.addGlobalDeadCodeEliminationPass' pm
+  --     runPassManager pm bc
+  --     writeLLVMAssemblyToFile (File (baseFile ++ ".ll")) bc
+  --     -- moduleLLVMAssembly bc >>= liftIO . B8.putStrLn
+  --     writeTargetAssemblyToFile tm (File (baseFile ++ ".s")) bc
+  --     writeObjectToFile tm (File (baseFile ++ ".so")) bc
+  res <- liftIO $ do
     (exitc, stdout, stderr) <-
       readCreateProcessWithExitCode (proc baseFile []) ""
     putStrLn stdout

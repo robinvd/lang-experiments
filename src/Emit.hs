@@ -16,12 +16,15 @@ import LLVM.AST.Float
 import qualified LLVM.AST.CallingConvention as CC
 import           LLVM.AST.Constant as C
 import           LLVM.AST.Global as G
-import           LLVM.AST.Type as AST.T
+import           LLVM.AST.Type hiding (ptr)
+import qualified LLVM.AST.Type as AST.T
+import LLVM.AST.AddrSpace
 import qualified LLVM.AST.IntegerPredicate as I
 import qualified LLVM.AST.FloatingPointPredicate as F
 import           LLVM.AST.Typed
 import qualified LLVM.AST.Linkage as L
 import           LLVM.IRBuilder hiding (call, double)
+import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Attribute as A
 import Control.Monad.State hiding (void)
 import GHC.Float
@@ -38,6 +41,7 @@ import qualified Type as T
 toShort :: T.Text -> Short.ShortByteString
 toShort = fromString . T.unpack
 
+ptr x = PointerType x (AddrSpace 1)
 
 call :: MonadIRBuilder m 
      => Operand 
@@ -89,7 +93,7 @@ functionWithAttr label attr argtys retty body = do
     def = GlobalDefinition functionDefaults
       { name        = label
       , G.callingConvention = CC.Fast
-      -- , linkage     = L.Private
+      , linkage     = L.Private
       , parameters  = (zipWith (\ty nm -> Parameter ty nm []) tys paramNames, False)
       , returnType  = retty
       , basicBlocks = blocks
@@ -109,7 +113,7 @@ instance MonadModuleBuilder m => MonadModuleBuilder (IRBuilderT m) where
 newtype Supply = Supply Word
 
 runEmit :: Core.Core T.Scheme (T.Name, T.Scheme) -> Int -> AST.Module
-runEmit core count = flip evalState (Supply 10) $ do
+runEmit core count = flip evalState (Supply 0) $ do
   -- buildModuleT "main" $ do
   defs <- execModuleBuilderT emptyModuleBuilder $ do
     setup
@@ -181,7 +185,7 @@ convert c = case c of
       instantiate (pure . pure . (res !!)) se
   Core.Case t predCore armT arms -> do
     pred <- convert predCore
-    finalizer <- fresh
+    finalizer <- freshName "end"
     ends <- (convertAlt finalizer pred) arms
     emitBlockStart finalizer
     phi ends
@@ -217,8 +221,8 @@ convertAlt final pred (a:as) = do
     Core.PLit l -> do
       lOpr <- convertLit l
       b <- cmpLit pred lOpr
-      trueName <- fresh
-      falseName <- fresh
+      trueName <- freshName "cond"
+      falseName <- freshName "cond"
       condBr b trueName falseName
       emitBlockStart trueName
       val <- convert $ instantiate1 undefined sc
@@ -229,7 +233,7 @@ convertAlt final pred (a:as) = do
     Core.PVar -> do
       let c = instantiate1 (pure . pure $ pred) sc
 
-      name <- fresh
+      name <- freshName "cond"
       br name
       emitBlockStart name
       oper <- convert c
@@ -258,11 +262,15 @@ mkString str = do
     , isConstant = True
     , initializer = Just $ Array i8 $ map (Int 8 . toInteger . fromEnum) str
     }
-  return $ ConstantOperand $ GlobalReference (ptr arrT) $ name
+  return $ 
+    ConstantOperand $ 
+      C.BitCast 
+        (GlobalReference (AST.T.ptr arrT) $ name)
+        (AST.T.ptr i8)
 
 puts :: MonadIRBuilder m => Operand -> m Operand
 puts str = do
-  callWith CC.C (ConstantOperand $ GlobalReference (ptr $ FunctionType VoidType [ptr i8] False) "puts")
+  callWith CC.C (ConstantOperand $ GlobalReference (AST.T.ptr $ FunctionType VoidType [ptr i8] False) "puts")
     [(str, [])]
 
 exit :: MonadIRBuilder m => m Operand
@@ -271,18 +279,26 @@ exit = callWith CC.C (ConstantOperand $ GlobalReference (FunctionType VoidType [
 malloc :: MonadIRBuilder m => Type -> m Operand
 malloc t = do
   let ft = ptr $ FunctionType (ptr i8) [i64] False
-      size = ConstantOperand $ Int 64 4
+      size = ConstantOperand $ Int 64 8
       
   space <- callWith CC.C (ConstantOperand $ GlobalReference ft "alloc") [(size,[])]
   bitcast space (ptr t)
 
 primitives :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 primitives = do
-  extern "puts" [ptr i8] void
-  extern "alloc" [i64] (ptr i8)
+  extern "puts" [AST.T.ptr i8] void
+  -- extern "alloc" [i64] (ptr i8)
   extern "initGC" [] void
   extern "exit" [] void
-  extern "fflush" [ptr i8] void
+  extern "fflush" [AST.T.ptr i8] void
+
+  emitDefn $ GlobalDefinition functionDefaults
+    { name        = "alloc"
+    , parameters  = ([Parameter i64 (mkName "") []], False)
+    , returnType  = ptr i8
+    , garbageCollectorName = Just "statepoint-example"
+    }
+
   -- extern "sqrt" [float] float
   let binf name ty opr = functionWithAttr
         name
@@ -297,18 +313,18 @@ primitives = do
           store space 0 new
           ret space
 
-  binf "add" i64 add
+  -- binf "add" i64 add
   binf "+" i64 add
-  binf "sub" i64 sub
+  -- binf "sub" i64 sub
   binf "-" i64 sub
-  binf "mul" i64 mul
-  binf "div" i64 sdiv
-  binf "rem" i64 urem
-  binf "fadd" AST.T.double fadd
-  binf "fsub" AST.T.double fsub
-  binf "fmul" AST.T.double fmul
-  binf "fdiv" AST.T.double fdiv
-  binf "frem" AST.T.double frem
+  -- binf "mul" i64 mul
+  -- binf "div" i64 sdiv
+  -- binf "rem" i64 urem
+  -- binf "fadd" AST.T.double fadd
+  -- binf "fsub" AST.T.double fsub
+  -- binf "fmul" AST.T.double fmul
+  -- binf "fdiv" AST.T.double fdiv
+  -- binf "frem" AST.T.double frem
   return ()
 
 setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
@@ -329,8 +345,8 @@ buildMain _ = do
       fnT = ptr $ FunctionType void [ptr i8] False
       exitT = ptr $ FunctionType void [] False
       puts = toF "puts" void [ptr i8]
-      fflush = toF "fflush" void [ptr i8]
-      null = (ConstantOperand $ C.IntToPtr (Int 8 0) (ptr i8), [])
+      fflush = toF "fflush" void [AST.T.ptr i8]
+      null = (ConstantOperand $ C.IntToPtr (Int 8 0) (AST.T.ptr i8), [])
 
   r <- call (ConstantOperand $ GlobalReference (toT void []) "initGC") []
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []

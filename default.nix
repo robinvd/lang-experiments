@@ -24,18 +24,15 @@ let
         src = builtins.filterSource (path: type: pkgs.lib.hasSuffix ".cabal" path) src;
       }) args) (_: { inherit src; });
 
-
-  s = pkgs.fetchgit {
-    url = https://github.com/llvm-hs/llvm-hs-pretty;
-    rev = "7e426813eeb3a7e6337ce78674260bbae35d40ed";
-    sha256 = "0l8dkxk36l5zlhmv26bxmxbck4g9nhdw6kakpcp32v8xr76i9bid";
-  };
-
-  jobs = pkgs.lib.attrsets.mapAttrs (name: value: pkgs.haskell.lib.dontHaddock (pkgs.haskell.lib.dontCheck value)) {
-    llvm-hs-pretty = myCall s {};
+  jobs = pkgs.lib.attrsets.mapAttrs (name: value: pkgs.haskell.lib.dontHaddock (pkgs.haskell.lib.dontCheck value)) { ff
     llvm-hs = myCall ./nix/llvm-hs.nix {};
     llvm-hs-pure = myCall ./nix/llvm-hs-pure.nix {};
     megaparsec = myCall ./nix/megaparsec.nix {};
+    llvm-hs-pretty = myCall (pkgs.fetchgit {
+      url = "https://github.com/llvm-hs/llvm-hs-pretty";
+      rev = "ddc95f9bc6dd7b5690e96a4c548c059bcee43dd1";
+      sha256 = "04p2ag2ishspa3ms9zc8xwzdr12ghf0ysgn9v53jblldv3dzl62x";
+    }) {};
 
   };
   rlang = myCall ./nix/app.nix {};

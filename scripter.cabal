@@ -28,6 +28,7 @@ library
                      , deriving-compat
                      , llvm-hs
                      , llvm-hs-pure
+                     , llvm-hs-pretty
                      , bytestring
                      , pretty-simple
                      , process

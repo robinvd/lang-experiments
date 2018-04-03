@@ -14,5 +14,3 @@ import           Run
 
 main :: IO ()
 main = run "lib/test.raku"
-
-

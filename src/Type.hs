@@ -2,11 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Type where
 
-import qualified Data.Map        as M
-import           Data.Text       (Text)
+import qualified Data.Map           as M
+import           Data.Text          (Text)
 import           Data.Void
-import qualified LLVM.AST.Type   as T
-import qualified LLVM.AST.Typed  as T
+import           LLVM.AST.AddrSpace
+import qualified LLVM.AST.Type      as T
+import qualified LLVM.AST.Typed     as T
 import           Text.Megaparsec
 
 data Err
@@ -40,13 +41,15 @@ data Type
   | TVar TVar
   deriving (Show, Eq, Ord)
 
+ptr x = T.PointerType x (AddrSpace 1)
+
 instance T.Typed Type where
   typeOf (TVar t) = T.ptr T.i8
   typeOf (TFunc args ret) = T.FunctionType (T.typeOf ret) (map T.typeOf args) False
   typeOf (Type t) = case t of
-                      "Int"   -> T.ptr T.i64
-                      "Float" -> T.ptr T.double
-                      "Unit"  -> T.ptr T.i8
+                      "Int"   -> ptr T.i64
+                      "Float" -> ptr T.double
+                      "Unit"  -> ptr T.i8
 
 int = Type "Int"
 float = Type "Float"
@@ -73,4 +76,4 @@ primTypes = M.fromList
       f2 n t = (n,TFunc [t,t] t)
 
 lookupPrim :: Text -> Type
-lookupPrim x = M.findWithDefault (error "no prim") x primTypes
+lookupPrim x = M.findWithDefault (error $ "no prim: " ++ show x) x primTypes
