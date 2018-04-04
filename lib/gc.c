@@ -1,7 +1,7 @@
 #define PRINT_STUFF
 
 #include <stdio.h>
-#include "./llvm-statepoint-utils/dist/llvm-statepoint-tablegen.h"
+#include "./llvm-statepoint-tablegen.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
@@ -133,14 +133,15 @@ void doGC(uint8_t* stackPtr) {
     memset(auxHeap, 0x7F, heapSizeB); 
 }
 
+void enterGC() {
+  __asm__ ( "mov %rsp, %rdi;"
+            "jmp doGC;"
+  );
+}
 uint8_t* alloc(size_t s) {
+
   if (heapPtr + s > heapBase + heapSizeB - 8) {
-    /* enterGC(); */
-    /* __asm__ ( "mov %rsp, %rdi;" */
-    /*           "jmp doGC;" */
-    /* ); */
-    __asm__ ( "callq enterGC ;"
-    );
+    enterGC();
   }
 
   uint8_t* mem = heapPtr;
