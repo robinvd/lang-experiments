@@ -24,7 +24,7 @@ let
         src = builtins.filterSource (path: type: pkgs.lib.hasSuffix ".cabal" path) src;
       }) args) (_: { inherit src; });
 
-  jobs = pkgs.lib.attrsets.mapAttrs (name: value: pkgs.haskell.lib.dontHaddock (pkgs.haskell.lib.dontCheck value)) { ff
+  jobs = pkgs.lib.attrsets.mapAttrs (name: value: pkgs.haskell.lib.dontHaddock (pkgs.haskell.lib.dontCheck value)) {
     llvm-hs = myCall ./nix/llvm-hs.nix {};
     llvm-hs-pure = myCall ./nix/llvm-hs-pure.nix {};
     megaparsec = myCall ./nix/megaparsec.nix {};

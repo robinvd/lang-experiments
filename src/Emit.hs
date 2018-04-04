@@ -130,11 +130,11 @@ convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m)
 convertLit l = case l of
   Core.Int i -> do
     space <- malloc i64 -- alloca i64 Nothing 0
-    store space 0 (ConstantOperand $ Int 64 $ toInteger i)
+    store space 8 (ConstantOperand $ Int 64 $ toInteger i)
     return space
   Core.Float f -> do
     space <- malloc double
-    store space 0 (ConstantOperand $ Float $ Double $ float2Double f)
+    store space 8 (ConstantOperand $ Float $ Double $ float2Double f)
     return space
   -- Core.Char c -> $ Int 8 $ toInteger $ fromEnum c
   _ -> error "not done yet"
@@ -154,7 +154,7 @@ cmpLit a b = do
     getLit opr =
       case typeOf opr of
         PointerType t _ -> do
-          load opr 0 >>= getLit
+          load opr 8 >>= getLit
         IntegerType _ -> pure opr
         FloatingPointType _ -> pure opr
         _ -> error "not a lit in cmpLit"
@@ -306,11 +306,11 @@ primitives = do
         [(ptr ty, NoParameterName), (ptr ty, NoParameterName)] 
         (ptr ty) 
         $ \[a,b] -> do
-          x <- load a 0
-          y <- load b 0
+          x <- load a 8
+          y <- load b 8
           new <- opr x y
           space <- malloc ty
-          store space 0 new
+          store space 8 new
           ret space
 
   -- binf "add" i64 add
@@ -331,9 +331,9 @@ setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 setup = do
   str <- mkString "runPoll"
   primitives
-  function "gc.safepoint_poll" [] void $ \_ -> do
-    puts str
-    retVoid
+  -- function "gc.safepoint_poll" [] void $ \_ -> do
+  --   puts str
+  --   retVoid
     
   function "main" [] (i64) buildMain
   return ()
@@ -351,4 +351,4 @@ buildMain _ = do
   r <- call (ConstantOperand $ GlobalReference (toT void []) "initGC") []
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []
   emitInstrVoid $ Call Nothing CC.C [] fflush [null] [] []
-  ret =<< load r 0
+  ret =<< load r 8

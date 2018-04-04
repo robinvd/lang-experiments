@@ -7,6 +7,7 @@ import           Prelude                       hiding (lookup)
 
 import           Control.Monad.Except
 import qualified Data.ByteString.Char8         as B8
+import           Data.Monoid
 import           Data.String                   (fromString)
 import qualified Data.Text.IO                  as T
 import qualified Data.Text.Lazy.IO             as TL
@@ -83,17 +84,19 @@ llvm fileName core baseCount = do
           , "-functionattrs"
           , "-tailcallelim"
           , "-strip-dead-debug-info"
-          , "-place-backedge-safepoints-impl"
+          -- , "-place-backedge-safepoints-impl"
           , "-rewrite-statepoints-for-gc"
           ]
         outArg = ["-o", baseFile ++ ".bc"]
         includes =
           [ "lib/gc.c"
-          , "lib/llvm-statepoint-utils/dist/llvm-statepoint-tablegen.a"
-          , "lib/shim.s"
+          , "lib/statepoint.c"
           ]
         clangOutArg = ["-o", baseFile]
-    TL.writeFile llFile $ ppllvm ast
+    TL.writeFile llFile $
+      "target datalayout = \"e-m:e-i64:64-f80:128-n8:16:32:64-S128\"\n"
+      <> "target triple = \"x86_64-unknown-linux-gnu\"\n"
+      <> ppllvm ast
     waitForProcess =<<
       spawnProcess "opt" (passes ++ [llFile] ++ outArg)
     waitForProcess =<<
@@ -118,6 +121,7 @@ llvm fileName core baseCount = do
     (exitc, stdout, stderr) <-
       readCreateProcessWithExitCode (proc baseFile []) ""
     putStrLn stdout
+    putStrLn stderr
     return $ case exitc of
                  ExitSuccess   -> 0
                  ExitFailure i -> i
