@@ -91,6 +91,7 @@ llvm fileName core baseCount = do
         includes =
           [ "lib/gc.c"
           , "lib/statepoint.c"
+          , "lib/gcdef.ll"
           ]
         clangOutArg = ["-o", baseFile]
     TL.writeFile llFile $

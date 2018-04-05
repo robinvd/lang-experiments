@@ -287,7 +287,6 @@ malloc t = do
 primitives :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 primitives = do
   extern "puts" [AST.T.ptr i8] void
-  -- extern "alloc" [i64] (ptr i8)
   extern "initGC" [] void
   extern "exit" [] void
   extern "fflush" [AST.T.ptr i8] void
@@ -296,6 +295,12 @@ primitives = do
     { name        = "alloc"
     , parameters  = ([Parameter i64 (mkName "") []], False)
     , returnType  = ptr i8
+    , garbageCollectorName = Just "statepoint-example"
+    }
+  emitDefn $ GlobalDefinition functionDefaults
+    { name        = "prInt"
+    , parameters  = ([Parameter (ptr i64) (mkName "") []], False)
+    , returnType  = void
     , garbageCollectorName = Just "statepoint-example"
     }
 
@@ -351,4 +356,5 @@ buildMain _ = do
   r <- call (ConstantOperand $ GlobalReference (toT void []) "initGC") []
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []
   emitInstrVoid $ Call Nothing CC.C [] fflush [null] [] []
+  call (ConstantOperand $ GlobalReference (toT void [ptr i64]) "prInt") [(r,[])]
   ret =<< load r 8

@@ -18,4 +18,4 @@ let
     }
   // half = (x) -> fdiv(x,2.0)
 // in g(isEven(5))
-in fib(10)
+in fib(5)
