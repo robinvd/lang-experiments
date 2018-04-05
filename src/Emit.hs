@@ -334,12 +334,7 @@ primitives = do
 
 setup :: (MonadState Supply m, MonadModuleBuilder m) => m ()
 setup = do
-  str <- mkString "runPoll"
   primitives
-  -- function "gc.safepoint_poll" [] void $ \_ -> do
-  --   puts str
-  --   retVoid
-    
   function "main" [] (i64) buildMain
   return ()
 
@@ -357,4 +352,4 @@ buildMain _ = do
   r <- call (ConstantOperand $ GlobalReference (toT (ptr i64) []) "userMain") []
   emitInstrVoid $ Call Nothing CC.C [] fflush [null] [] []
   call (ConstantOperand $ GlobalReference (toT void [ptr i64]) "prInt") [(r,[])]
-  ret =<< load r 8
+  ret (ConstantOperand $ Int 64 0)

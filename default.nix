@@ -1,9 +1,15 @@
 {system ? builtins.currentSystem}:
 let
-  nixpkgs = fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.03.tar.gz;
+  syspkgs = import <nixpkgs> {inherit system; };
+  # nixpkgs = fetchTarball https://github.com/NixOS/nixpkgs-channels/archive/nixos-18.03.tar.gz;
+  nixpkgs = syspkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "6c8abecbef1f810eb89ffb5a885f8894963ce5a4";
+    sha256 = "1vy0zd89vg81abg90hksbi520nzh1kfivd2ygaklm1ai4994v4pg";
+  };
   pkgs = import nixpkgs { config = {}; };
 
-  # pkgs = import <nixpkgs> {inherit system; };
   myCall = pkgs.lib.callPackageWith (pkgs // pkgs.haskell.packages.ghc822 // jobs);
 
   callCabal2nix = pkgs.haskellPackages.callCabal2nix;
