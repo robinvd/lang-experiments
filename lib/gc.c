@@ -152,7 +152,16 @@ __attribute__((noinline)) uint8_t* alloc(int size) {
     doGC( (uint64_t*) __builtin_frame_address(0) + 1);
   }
 
-  /* puts("make header"); */
+  if (heapPtr + sizeof(header) + size > heapBase + heapSizeB) {
+    free(auxHeap);
+    auxHeap = malloc(heapSizeB * 2);
+    doGC( (uint64_t*) __builtin_frame_address(0) + 1);
+
+    free(auxHeap);
+    auxHeap = malloc(heapSizeB * 2);
+
+    heapSizeB *= 2;
+  }
 
   header* h = (header*) heapPtr;
   initHeader(h, size);
