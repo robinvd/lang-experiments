@@ -20,6 +20,7 @@ data Err
   | ParseError (ParseError (Token Text) (Void))
   | RunError Text
   | InternalErr
+  | ExternalErr Int FilePath [String] String
   deriving (Show)
 
 data Name = Name

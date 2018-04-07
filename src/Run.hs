@@ -3,44 +3,26 @@
 {-# LANGUAGE OverloadedStrings        #-}
 module Run where
 
-import           Prelude                       hiding (lookup)
+import           Prelude              hiding (lookup)
 
 import           Control.Monad.Except
-import qualified Data.ByteString.Char8         as B8
 import           Data.Monoid
-import           Data.String                   (fromString)
-import qualified Data.Text.IO                  as T
-import qualified Data.Text.Lazy.IO             as TL
-import           Foreign.Ptr                   (FunPtr, castFunPtr)
-import qualified LLVM.AST                      as AST
-import           LLVM.Context
-import qualified LLVM.ExecutionEngine          as EE
-import           LLVM.Module                   as Mod
-import           LLVM.PassManager
-import           LLVM.Pretty                   (ppllvm)
-import           LLVM.Target
-import           LLVM.Transforms
+import           Data.String          (fromString)
+import qualified Data.Text.IO         as T
+import qualified Data.Text.Lazy.IO    as TL
+import qualified LLVM.AST             as AST
+import           LLVM.Pretty          (ppllvm)
 import           System.Exit
 import           System.Process
-import           Text.Megaparsec               (parse, parseErrorPretty)
+import           Text.Megaparsec      (parseErrorPretty)
 import           Text.Pretty.Simple
 
 import           Core
 import           Emit
-import           Interpreter
 import           Parser
 import           Rename
 import           Type
 import           Typechecker
-
-import qualified LLVM.Internal.FFI.PassManager as F
-
-foreign import ccall "dynamic" haskFun :: FunPtr (IO Int) -> (IO Int)
-
-liftMaybe :: Monad m => Maybe a -> ExceptT Err m a
-liftMaybe m = case m of
-                Just x  -> liftEither $ Right x
-                Nothing -> liftEither $ Left $ RunError "result is a func"
 
 total :: String -> ExceptT Err IO ()
 total fileName = do
@@ -50,11 +32,6 @@ total fileName = do
       preludeTyped :: Core () (Name, Type)
       preludeTyped = (\x -> (x, lookupPrim $ nameOrig x)) <$> renamed
   t <- liftEither $ inferExpr mempty preludeTyped
-  -- liftIO $ pPrint t
-  -- liftIO $ putStrLn "---"
-  -- e <- eval (snd . lookup . nameOrig . fst <$> t)
-  -- eres <- liftMaybe $ closed e
-  -- liftIO $ print (eres :: Core Scheme T.Text)
   llvmres <- llvm fileName t baseCount
   liftIO $ putStrLn $ "exit code: " ++ show llvmres
 
@@ -67,6 +44,13 @@ run file = do
                   _               -> print err
     Right _  -> putStrLn "succes"
 
+spawn :: FilePath -> [String] -> ExceptT Err IO ()
+spawn n args = do
+  res <- liftIO $ waitForProcess =<< spawnProcess n args
+  case res of
+    ExitSuccess   -> return ()
+    ExitFailure i -> throwError $ ExternalErr i n args ""
+
 llvm :: String -> Core Scheme (Name,Scheme) -> Int -> ExceptT Err IO Int
 llvm fileName core baseCount = do
   let baseFile = takeWhile (/= '.') fileName
@@ -74,50 +58,35 @@ llvm fileName core baseCount = do
         {AST.moduleSourceFileName = fromString fileName}
   liftIO $ TL.writeFile (baseFile ++ ".ast") $ pShowNoColor ast
 
+  let llFile = baseFile ++ ".ll"
+      passes =
+        -- [ "-internalize"
+        [ "-simplifycfg"
+        , "-always-inline"
+        , "-globaldce"
+        , "-functionattrs"
+        , "-tailcallelim"
+        , "-strip-dead-debug-info"
+        -- , "-place-backedge-safepoints-impl"
+        , "-rewrite-statepoints-for-gc"
+        ]
+      outArg = ["-o", baseFile ++ ".bc"]
+      includes =
+        [ "lib/gc.c"
+        , "lib/statepoint.c"
+        , "lib/gcdef.ll"
+        ]
+      clangOutArg = ["-o", baseFile]
   liftIO $ do
-    let llFile = baseFile ++ ".ll"
-        passes =
-          -- [ "-internalize"
-          [ "-simplifycfg"
-          , "-globaldce"
-          , "-always-inline"
-          , "-functionattrs"
-          , "-tailcallelim"
-          , "-strip-dead-debug-info"
-          -- , "-place-backedge-safepoints-impl"
-          , "-rewrite-statepoints-for-gc"
-          ]
-        outArg = ["-o", baseFile ++ ".bc"]
-        includes =
-          [ "lib/gc.c"
-          , "lib/statepoint.c"
-          , "lib/gcdef.ll"
-          ]
-        clangOutArg = ["-o", baseFile]
     TL.writeFile llFile $
       "target datalayout = \"e-m:e-i64:64-f80:128-n8:16:32:64-S128\"\n"
       <> "target triple = \"x86_64-unknown-linux-gnu\"\n"
       <> ppllvm ast
-    waitForProcess =<<
-      spawnProcess "opt" (passes ++ [llFile] ++ outArg)
-    waitForProcess =<<
-      spawnProcess "llc" [baseFile ++ ".bc"]
-    T.appendFile (baseFile ++ ".s") ".globl __LLVM_StackMaps"
-    waitForProcess =<<
-      spawnProcess "clang" ([baseFile ++ ".s"] ++ includes ++ clangOutArg)
+  spawn "opt" (passes ++ [llFile] ++ outArg)
+  spawn "llc" [baseFile ++ ".bc"]
+  liftIO $ T.appendFile (baseFile ++ ".s") ".globl __LLVM_StackMaps"
+  spawn "clang" ([baseFile ++ ".s"] ++ includes ++ clangOutArg)
 
-  -- liftIO $ putStrLn "start llvm"
-  -- liftIO $
-  --   withContext $ \c ->
-  --   withHostTargetMachine $ \tm ->
-  --   withModuleFromAST c ast $ \bc ->
-  --   withPassManager (passes $ Just tm) $ \pm -> do
-  --     F.addGlobalDeadCodeEliminationPass' pm
-  --     runPassManager pm bc
-  --     writeLLVMAssemblyToFile (File (baseFile ++ ".ll")) bc
-  --     -- moduleLLVMAssembly bc >>= liftIO . B8.putStrLn
-  --     writeTargetAssemblyToFile tm (File (baseFile ++ ".s")) bc
-  --     writeObjectToFile tm (File (baseFile ++ ".so")) bc
   res <- liftIO $ do
     (exitc, stdout, stderr) <-
       readCreateProcessWithExitCode (proc baseFile []) ""
@@ -128,66 +97,3 @@ llvm fileName core baseCount = do
                  ExitFailure i -> i
   return res
 
-jit :: Context -> (EE.MCJIT -> IO a) -> IO a
-jit c = EE.withMCJIT c optlevel model ptrelim fastins
-  where
-    optlevel = Just 3  -- optimization level
-    model    = Nothing -- code model ( Default )
-    ptrelim  = Nothing -- frame pointer elimination
-    fastins  = Nothing -- fast instruction selection
-
-passes :: Maybe TargetMachine -> PassSetSpec
-passes tm =
-  defaultPassSetSpec
-    { targetMachine = tm
-    , transforms = noPasses
-    }
-
-noPasses,allPasses,testPasses :: [Pass]
-noPasses = []
-allPasses =
-  [ AlwaysInline True
-  , InternalizeFunctions ["main"]
-  , FunctionAttributes
-  , PartialInlining
-  , FunctionInlining 1
-  , PromoteMemoryToRegister
-  -- , Reassociate
-  , TailCallElimination
-  , Sinking
-  , ArgumentPromotion
-
-  , InstructionCombining
-  , GlobalValueNumbering True
-
-  , DeadCodeElimination
-
-  , DeadInstructionElimination
-  , DeadStoreElimination
-  --
-  , GlobalDeadCodeElimination
-  ]
-testPasses =
-  [ AlwaysInline True
-  , InternalizeFunctions ["main"]
-  , FunctionAttributes
-  -- , PartialInlining
-  -- , FunctionInlining 1
-  -- , PromoteMemoryToRegister
-  -- , Reassociate
-  , TailCallElimination
-  -- , SimplifyLibCalls
-  -- , Sinking
-  -- , ArgumentPromotion
-
-  , InstructionCombining
-  , GlobalValueNumbering True
-  , SimplifyControlFlowGraph
-
-  -- , DeadCodeElimination
-
-  -- , DeadInstructionElimination
-  -- , DeadStoreElimination
-  --
-  , GlobalDeadCodeElimination
-  ]
