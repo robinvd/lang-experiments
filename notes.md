@@ -8,3 +8,5 @@
   - almost llvm but without registers
     so alloc/store/load/call/br
     (without metadata?)
+
+syntax (uses bound) -> (renamer) Core () Id -> (typechecker) Core Type Id -> (?) Lower -> (Emit) LLVM
