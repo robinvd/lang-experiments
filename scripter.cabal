@@ -33,6 +33,7 @@ library
                      , pretty-simple
                      , process
   exposed-modules:
+    BedRock
     Codegen
     Core
     Emit

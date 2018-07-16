@@ -25,13 +25,6 @@ import           Type
 
 type Func = [Lit] -> ExceptT Err IO Lit
 
-data Lit
-  = Int Int
-  | Float Float
-  | Char Char
-  | String Text
-  | Unit
-  deriving (Eq,Ord,Show,Read)
 
 data Alt f a = Alt Pat (Scope () f a)
   deriving (Traversable, Functor, Foldable, Ord, Eq, Read)

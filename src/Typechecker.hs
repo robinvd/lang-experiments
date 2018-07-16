@@ -23,14 +23,6 @@ import qualified Data.Text              as T
 import           Core
 import           Type
 
-typeLit :: Lit -> Type
-typeLit = \case
-  Int _ -> int
-  Float _ -> float
-  Char _ -> Type "Char"
-  String _ -> error "no strings"
-  Unit -> Type "Unit"
-
 type Subst = M.Map TVar Type
 newtype TypeEnv = TypeEnv {types :: (M.Map Text Scheme)} deriving (Monoid)
 type Constraint = (Type, Type)

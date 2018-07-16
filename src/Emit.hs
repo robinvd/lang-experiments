@@ -5,7 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecursiveDo #-}
-module Emit (runEmit, primitives) where
+module Emit (runEmit, primitives, malloc) where
 
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -126,13 +126,13 @@ runEmit core count = flip evalState (Supply 0) $ do
     }
 
 convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m) 
-           => Core.Lit -> m Operand
+           => T.Lit -> m Operand
 convertLit l = case l of
-  Core.Int i -> do
+  T.Int i -> do
     space <- malloc i64 -- alloca i64 Nothing 0
     store space 8 (ConstantOperand $ Int 64 $ toInteger i)
     return space
-  Core.Float f -> do
+  T.Float f -> do
     space <- malloc double
     store space 8 (ConstantOperand $ Float $ Double $ float2Double f)
     return space

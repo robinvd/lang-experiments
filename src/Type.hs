@@ -10,6 +10,14 @@ import qualified LLVM.AST.Type      as T
 import qualified LLVM.AST.Typed     as T
 import           Text.Megaparsec
 
+data Lit
+  = Int Int
+  | Float Float
+  | Char Char
+  | String Text
+  | Unit
+  deriving (Eq,Ord,Show,Read)
+
 data Err
   = TypeError Type Type
   | UnificationMismatch [Type] [Type]
@@ -43,6 +51,15 @@ data Type
   deriving (Show, Eq, Ord)
 
 ptr x = T.PointerType x (AddrSpace 1)
+
+typeLit :: Lit -> Type
+typeLit = \case
+  Int _ -> int
+  Float _ -> float
+  Char _ -> Type "Char"
+  String _ -> error "no strings"
+  Unit -> Type "Unit"
+
 
 instance T.Typed Type where
   typeOf (TVar t) = T.ptr T.i8

@@ -10,7 +10,7 @@ import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import           Core
-import           Type                       (Err (..))
+import           Type                       (Err (..), Lit (..))
 
 type Parser = Parsec Void Text
 

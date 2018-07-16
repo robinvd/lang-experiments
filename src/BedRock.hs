@@ -87,8 +87,8 @@ emitRef :: Ref -> IRBuilder L.Operand
 emitRef = \case
   Lit l -> case l of
     Int i -> do
-      space <- alloca AST.T.i64 Nothing 0
-      store space 8 (L.ConstantOperand $ C.Int 64 $ toInteger i)
+      space <- alloca AST.T.i64 Nothing 4
+      store space 4 (L.ConstantOperand $ C.Int 64 $ toInteger i)
       return space
 
 emitBlock :: [L.Operand] -> Block -> IRBuilder ()
@@ -107,9 +107,3 @@ emitBedRock :: Instruction -> IRBuilder ()
 emitBedRock = \case
   Call space n args -> undefined
   Alloc space t -> undefined
-
--- emitBedRockVoid :: BedRockVoid -> IRBuilder ()
--- emitBedRockVoid = \case
---   Return o -> ret (operToLLVM o) >> return undefined
---   ReturnVoid -> retVoid >> return undefined
---   Assign addr val -> store (operToLLVM addr) 4 (operToLLVM val)

@@ -1,0 +1,3057 @@
+Module 
+    { moduleName = "main"
+    , moduleSourceFileName = "lib/test.raku"
+    , moduleDataLayout = Nothing
+    , moduleTargetTriple = Nothing
+    , moduleDefinitions = 
+        [ GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = VoidType
+                , name = Name "puts"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 8 }
+                                , pointerAddrSpace = AddrSpace 0
+                                } 
+                            ) ( Name "" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Nothing
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = VoidType
+                , name = Name "initGC"
+                , parameters = 
+                    ( []
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Nothing
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = VoidType
+                , name = Name "exit"
+                , parameters = 
+                    ( []
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Nothing
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = VoidType
+                , name = Name "fflush"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 8 }
+                                , pointerAddrSpace = AddrSpace 0
+                                } 
+                            ) ( Name "" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Nothing
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 8 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "alloc"
+                , parameters = 
+                    ( [ Parameter ( IntegerType { typeBits = 64 } ) ( Name "" ) [] ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = VoidType
+                , name = Name "prInt"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( Name "" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = []
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "+"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( UnName 0 ) []
+                        , Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( UnName 1 ) []
+                        ] 
+                    , False
+                    ) 
+                , functionAttributes = [ Right AlwaysInline ]
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 2 ) 
+                        [ UnName 3 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 0 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 4 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 5 := Add 
+                            { nsw = False
+                            , nuw = False
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 3 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 4 )
+                            , metadata = []
+                            } 
+                        , UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 6 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 7 )
+                                , value = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 5 )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "-"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( UnName 0 ) []
+                        , Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( UnName 1 ) []
+                        ] 
+                    , False
+                    ) 
+                , functionAttributes = [ Right AlwaysInline ]
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 2 ) 
+                        [ UnName 3 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 0 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 4 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 5 := Sub 
+                            { nsw = False
+                            , nuw = False
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 3 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 4 )
+                            , metadata = []
+                            } 
+                        , UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 6 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 7 )
+                                , value = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 5 )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = External
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = C
+                , returnAttributes = []
+                , returnType = IntegerType { typeBits = 64 }
+                , name = Name "main"
+                , parameters = 
+                    ( []
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Nothing
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ Do 
+                            ( Call 
+                                { tailCallKind = Nothing
+                                , callingConvention = Fast
+                                , returnAttributes = []
+                                , function = Right 
+                                    ( ConstantOperand 
+                                        ( GlobalReference 
+                                            ( PointerType 
+                                                { pointerReferent = FunctionType 
+                                                    { resultType = VoidType
+                                                    , argumentTypes = []
+                                                    , isVarArg = False
+                                                    } 
+                                                , pointerAddrSpace = AddrSpace 1
+                                                } 
+                                            ) ( Name "initGC" )
+                                        )
+                                    )
+                                , arguments = []
+                                , functionAttributes = []
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = []
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "userMain" )
+                                    )
+                                )
+                            , arguments = []
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Call 
+                                { tailCallKind = Nothing
+                                , callingConvention = C
+                                , returnAttributes = []
+                                , function = Right 
+                                    ( ConstantOperand 
+                                        ( GlobalReference 
+                                            ( PointerType 
+                                                { pointerReferent = FunctionType 
+                                                    { resultType = VoidType
+                                                    , argumentTypes = 
+                                                        [ PointerType 
+                                                            { pointerReferent = IntegerType { typeBits = 8 }
+                                                            , pointerAddrSpace = AddrSpace 0
+                                                            } 
+                                                        ]
+                                                    , isVarArg = False
+                                                    } 
+                                                , pointerAddrSpace = AddrSpace 1
+                                                } 
+                                            ) ( Name "fflush" )
+                                        )
+                                    )
+                                , arguments = 
+                                    [ 
+                                        ( ConstantOperand 
+                                            ( IntToPtr 
+                                                { operand0 = Int 
+                                                    { integerBits = 8
+                                                    , integerValue = 0
+                                                    } 
+                                                , type' = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 0
+                                                    } 
+                                                } 
+                                            )
+                                        , []
+                                        ) 
+                                    ]
+                                , functionAttributes = []
+                                , metadata = []
+                                } 
+                            )
+                        , Do 
+                            ( Call 
+                                { tailCallKind = Nothing
+                                , callingConvention = Fast
+                                , returnAttributes = []
+                                , function = Right 
+                                    ( ConstantOperand 
+                                        ( GlobalReference 
+                                            ( PointerType 
+                                                { pointerReferent = FunctionType 
+                                                    { resultType = VoidType
+                                                    , argumentTypes = 
+                                                        [ PointerType 
+                                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                                            , pointerAddrSpace = AddrSpace 1
+                                                            } 
+                                                        ]
+                                                    , isVarArg = False
+                                                    } 
+                                                , pointerAddrSpace = AddrSpace 1
+                                                } 
+                                            ) ( Name "prInt" )
+                                        )
+                                    )
+                                , arguments = 
+                                    [ 
+                                        ( LocalReference 
+                                            ( PointerType 
+                                                { pointerReferent = IntegerType { typeBits = 64 }
+                                                , pointerAddrSpace = AddrSpace 1
+                                                } 
+                                            ) ( UnName 1 )
+                                        , []
+                                        ) 
+                                    ]
+                                , functionAttributes = []
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 0
+                                            } 
+                                        )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "isOdd0"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( Name "x" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 0
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 3 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( Name "x" )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 4 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 2 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 5 := ICmp 
+                            { iPredicate = EQ
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 3 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 4 )
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( CondBr 
+                                { condition = LocalReference ( IntegerType { typeBits = 1 } ) ( UnName 5 )
+                                , trueDest = Name "cond"
+                                , falseDest = Name "cond1"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond" ) 
+                        [ UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 6 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 7 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 0
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond1" ) [] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "cond2"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond2" ) 
+                        [ UnName 8 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 9 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 8 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 9 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 10 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "-" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 9 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 11 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "isEven1" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 10 )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "end" ) 
+                        [ UnName 12 := Phi 
+                            { type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , incomingValues = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    , Name "cond"
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 11 )
+                                    , Name "cond2"
+                                    ) 
+                                ] 
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 12 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ] 
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "isEven1"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( Name "x" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 0
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 3 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( Name "x" )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 4 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 2 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 5 := ICmp 
+                            { iPredicate = EQ
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 3 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 4 )
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( CondBr 
+                                { condition = LocalReference ( IntegerType { typeBits = 1 } ) ( UnName 5 )
+                                , trueDest = Name "cond"
+                                , falseDest = Name "cond1"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond" ) 
+                        [ UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 6 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 7 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond1" ) [] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "cond2"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond2" ) 
+                        [ UnName 8 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 9 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 8 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 9 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 10 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "-" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 9 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 11 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "isOdd0" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 10 )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "end" ) 
+                        [ UnName 12 := Phi 
+                            { type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , incomingValues = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    , Name "cond"
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 11 )
+                                    , Name "cond2"
+                                    ) 
+                                ] 
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 12 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ] 
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "f2"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 8 }
+                                , pointerAddrSpace = AddrSpace 0
+                                } 
+                            ) ( Name "x" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 50
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 2 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "g3"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( Name "x" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 2
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 3 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 4 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 3 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 4 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 5
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 5 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "-" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 4 )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "+" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 2 )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 5 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "+" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 6 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "fib4"
+                , parameters = 
+                    ( 
+                        [ Parameter 
+                            ( PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            ) ( Name "x" ) []
+                        ]
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 0
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 3 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( Name "x" )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 4 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 2 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 5 := ICmp 
+                            { iPredicate = EQ
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 3 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 4 )
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( CondBr 
+                                { condition = LocalReference ( IntegerType { typeBits = 1 } ) ( UnName 5 )
+                                , trueDest = Name "cond"
+                                , falseDest = Name "cond1"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond" ) 
+                        [ UnName 6 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 7 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 6 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 7 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 0
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond1" ) 
+                        [ UnName 8 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 9 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 8 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 9 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 10 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( Name "x" )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 11 := Load 
+                            { volatile = False
+                            , address = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 9 )
+                            , maybeAtomicity = Nothing
+                            , alignment = 8
+                            , metadata = []
+                            } 
+                        , UnName 12 := ICmp 
+                            { iPredicate = EQ
+                            , operand0 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 10 )
+                            , operand1 = LocalReference ( IntegerType { typeBits = 64 } ) ( UnName 11 )
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( CondBr 
+                                { condition = LocalReference ( IntegerType { typeBits = 1 } ) ( UnName 12 )
+                                , trueDest = Name "cond2"
+                                , falseDest = Name "cond3"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond2" ) 
+                        [ UnName 13 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 14 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 13 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 14 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond3" ) [] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "cond4"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "cond4" ) 
+                        [ UnName 15 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 16 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 15 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 16 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 1
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 17 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "-" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 16 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 18 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "fib4" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 17 )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 19 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 20 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 19 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 20 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 2
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 21 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "-" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "x" )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 20 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 22 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "fib4" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 21 )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 23 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    , PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ] 
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "+" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 18 )
+                                    , []
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 22 )
+                                    , []
+                                    ) 
+                                ] 
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Br 
+                                { dest = Name "end"
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    , BasicBlock ( Name "end" ) 
+                        [ UnName 24 := Phi 
+                            { type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , incomingValues = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 7 )
+                                    , Name "cond"
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 14 )
+                                    , Name "cond2"
+                                    ) 
+                                , 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 23 )
+                                    , Name "cond4"
+                                    ) 
+                                ] 
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 24 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ] 
+                , personalityFunction = Nothing
+                } 
+            )
+        , GlobalDefinition 
+            ( Function 
+                { linkage = Private
+                , visibility = Default
+                , dllStorageClass = Nothing
+                , callingConvention = Fast
+                , returnAttributes = []
+                , returnType = PointerType 
+                    { pointerReferent = IntegerType { typeBits = 64 }
+                    , pointerAddrSpace = AddrSpace 1
+                    } 
+                , name = Name "userMain"
+                , parameters = 
+                    ( []
+                    , False
+                    ) 
+                , functionAttributes = []
+                , section = Nothing
+                , comdat = Nothing
+                , alignment = 0
+                , garbageCollectorName = Just "statepoint-example"
+                , prefix = Nothing
+                , basicBlocks = 
+                    [ BasicBlock ( UnName 0 ) 
+                        [ Name "x":= Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , Name "x1":= BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( Name "x" )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( Name "x1" )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 42
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 1 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = C
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = [ IntegerType { typeBits = 64 } ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "alloc" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( ConstantOperand 
+                                        ( Int 
+                                            { integerBits = 64
+                                            , integerValue = 8
+                                            } 
+                                        )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        , UnName 2 := BitCast 
+                            { operand0 = LocalReference 
+                                ( PointerType 
+                                    { pointerReferent = IntegerType { typeBits = 8 }
+                                    , pointerAddrSpace = AddrSpace 1
+                                    } 
+                                ) ( UnName 1 )
+                            , type' = PointerType 
+                                { pointerReferent = IntegerType { typeBits = 64 }
+                                , pointerAddrSpace = AddrSpace 1
+                                } 
+                            , metadata = []
+                            } 
+                        , Do 
+                            ( Store 
+                                { volatile = False
+                                , address = LocalReference 
+                                    ( PointerType 
+                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                        , pointerAddrSpace = AddrSpace 1
+                                        } 
+                                    ) ( UnName 2 )
+                                , value = ConstantOperand 
+                                    ( Int 
+                                        { integerBits = 64
+                                        , integerValue = 20
+                                        } 
+                                    )
+                                , maybeAtomicity = Nothing
+                                , alignment = 8
+                                , metadata = []
+                                } 
+                            )
+                        , UnName 3 := Call 
+                            { tailCallKind = Nothing
+                            , callingConvention = Fast
+                            , returnAttributes = []
+                            , function = Right 
+                                ( ConstantOperand 
+                                    ( GlobalReference 
+                                        ( PointerType 
+                                            { pointerReferent = FunctionType 
+                                                { resultType = PointerType 
+                                                    { pointerReferent = IntegerType { typeBits = 64 }
+                                                    , pointerAddrSpace = AddrSpace 1
+                                                    } 
+                                                , argumentTypes = 
+                                                    [ PointerType 
+                                                        { pointerReferent = IntegerType { typeBits = 64 }
+                                                        , pointerAddrSpace = AddrSpace 1
+                                                        } 
+                                                    ]
+                                                , isVarArg = False
+                                                } 
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( Name "fib4" )
+                                    )
+                                )
+                            , arguments = 
+                                [ 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 2 )
+                                    , []
+                                    ) 
+                                ]
+                            , functionAttributes = []
+                            , metadata = []
+                            } 
+                        ] 
+                        ( Do 
+                            ( Ret 
+                                { returnOperand = Just 
+                                    ( LocalReference 
+                                        ( PointerType 
+                                            { pointerReferent = IntegerType { typeBits = 64 }
+                                            , pointerAddrSpace = AddrSpace 1
+                                            } 
+                                        ) ( UnName 3 )
+                                    )
+                                , metadata' = []
+                                } 
+                            )
+                        )
+                    ]
+                , personalityFunction = Nothing
+                } 
+            )
+        ] 
+    } 
