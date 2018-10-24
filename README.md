@@ -9,9 +9,6 @@ It has a functional, basic gc written in c.
 // 0 is false
 // 1 is true
 let
-  // #[debug, Eq] data List<a> = Cons(a List<a>)
-  // data Pair<a b> = Pair(a b)
-  // type String = List<Char>
   x = 42
   isOdd = (x) -> case x {
     0 -> 0  
