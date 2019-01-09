@@ -66,7 +66,7 @@ addGlobal g = S.modify $ \s -> s{globals = g:globals s}
 -- toGlobal :: Text -> Core.Expr' Text -> S.State Env ()
 -- toGlobal name x = do
 --   low <- lowerP x
---   -- addGlobal $ Global name 
+--   -- addGlobal $ Global name
 --   undefined
 
 -- lowerP :: Core.Expr' Text -> S.State Env (Lower Int)
