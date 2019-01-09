@@ -1,0 +1,10 @@
+#allow-newer: true
+
+resolver: lts-11.22
+packages:
+- .
+
+extra-deps:
+- llvm-hs-6.3.0
+- llvm-hs-pretty-0.5.0.0
+- llvm-hs-pure-6.2.1
