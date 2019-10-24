@@ -99,12 +99,12 @@ llvm fileName core baseCount = do
       <> "target triple = \"x86_64-unknown-linux-gnu\"\n"
       <> ppllvm ast
     waitForProcess =<<
-      spawnProcess "opt" (passes ++ [llFile] ++ outArg)
+      spawnProcess "opt-6.0" (passes ++ [llFile] ++ outArg)
     waitForProcess =<<
-      spawnProcess "llc" [baseFile ++ ".bc"]
+      spawnProcess "llc-6.0" [baseFile ++ ".bc"]
     T.appendFile (baseFile ++ ".s") ".globl __LLVM_StackMaps"
     waitForProcess =<<
-      spawnProcess "clang" ([baseFile ++ ".s"] ++ includes ++ clangOutArg)
+      spawnProcess "clang-6.0" ([baseFile ++ ".s"] ++ includes ++ clangOutArg)
 
   -- liftIO $ putStrLn "start llvm"
   -- liftIO $

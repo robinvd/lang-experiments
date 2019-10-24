@@ -43,15 +43,15 @@ toShort = fromString . T.unpack
 
 ptr x = PointerType x (AddrSpace 1)
 
-call :: MonadIRBuilder m 
-     => Operand 
-     -> [(Operand, [A.ParameterAttribute])] 
+call :: MonadIRBuilder m
+     => Operand
+     -> [(Operand, [A.ParameterAttribute])]
      -> m Operand
 call = callWith CC.Fast
-callWith :: MonadIRBuilder m 
+callWith :: MonadIRBuilder m
      => CC.CallingConvention
-     -> Operand 
-     -> [(Operand, [A.ParameterAttribute])] 
+     -> Operand
+     -> [(Operand, [A.ParameterAttribute])]
      -> m Operand
 callWith cc fun args = do
   let instr = Call {
@@ -125,7 +125,7 @@ runEmit core count = flip evalState (Supply 0) $ do
     , moduleName = "main"
     }
 
-convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m) 
+convertLit :: (MonadState Supply m, MonadModuleBuilder m, MonadIRBuilder m)
            => Core.Lit -> m Operand
 convertLit l = case l of
   Core.Int i -> do
@@ -170,18 +170,18 @@ convert c = case c of
   Core.Lit l -> convertLit l
   Core.V n -> n
   Core.Let t i ts ns sc se -> do
-    -- let init :: Monad m 
+    -- let init :: Monad m
     --          => [Operand]
     --          -> [Core.Core T.Scheme (IRBuilderT m Operand)]
-    let init elem = 
+    let init elem =
           map (instantiate (pure . pure . (elem !! ))) sc
 
     rec res <- forM (zip (init res) ns) $ \(c,n) -> convert c `named` (toShort n)
-      
-    convert $ 
-      -- unsafePerformIO (pPrint res) 
+
+    convert $
+      -- unsafePerformIO (pPrint res)
       -- `seq` unsafePerformIO (print $ res !! 0 == res !! 1)
-      -- `seq` 
+      -- `seq`
       instantiate (pure . pure . (res !!)) se
   Core.Case t predCore armT arms -> do
     pred <- convert predCore
@@ -206,7 +206,7 @@ convert c = case c of
 --   make a new block
 convertAlt :: (MonadFix m, MonadState Supply m, MonadModuleBuilder m)
            => Name
-           -> Operand 
+           -> Operand
            -> [Core.Alt (Core.Core T.Scheme) (IRBuilderT m Operand)]
            -> IRBuilderT m [(Operand, Name)]
 convertAlt _ _ [] = do
@@ -229,7 +229,7 @@ convertAlt final pred (a:as) = do
       br final
       emitBlockStart falseName
       ((val,trueName) :) <$> convertAlt final pred as
-      
+
     Core.PVar -> do
       let c = instantiate1 (pure . pure $ pred) sc
 
@@ -262,9 +262,9 @@ mkString str = do
     , isConstant = True
     , initializer = Just $ Array i8 $ map (Int 8 . toInteger . fromEnum) str
     }
-  return $ 
-    ConstantOperand $ 
-      C.BitCast 
+  return $
+    ConstantOperand $
+      C.BitCast
         (GlobalReference (AST.T.ptr arrT) $ name)
         (AST.T.ptr i8)
 
@@ -280,7 +280,7 @@ malloc :: MonadIRBuilder m => Type -> m Operand
 malloc t = do
   let ft = ptr $ FunctionType (ptr i8) [i64] False
       size = ConstantOperand $ Int 64 8
-      
+
   space <- callWith CC.C (ConstantOperand $ GlobalReference ft "alloc") [(size,[])]
   bitcast space (ptr t)
 
@@ -308,8 +308,8 @@ primitives = do
   let binf name ty opr = functionWithAttr
         name
         [Right A.AlwaysInline]
-        [(ptr ty, NoParameterName), (ptr ty, NoParameterName)] 
-        (ptr ty) 
+        [(ptr ty, NoParameterName), (ptr ty, NoParameterName)]
+        (ptr ty)
         $ \[a,b] -> do
           x <- load a 8
           y <- load b 8
